@@ -119,7 +119,7 @@ options(stringsAsFactors = FALSE)
 ### FlashLFQ
 
 ```{r flash}
-flash <- read.delim("2019_datasets/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular",
+flash <- read.delim("UPS/FlashLFQ_UPS/msms_FlashLFQ_QuantifiedBaseSequences.tsv",
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -127,17 +127,16 @@ flash$prot <- take_first_protein(flash$prot)
 flash_names <- names(flash)
 
 # flash no mbr
-flash_no_mbr <- read.delim("2019_datasets/FLASH_SGPS_Galaxy/flashnoMBR/Galaxy144-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_no_mbr <- read.delim("UPS/flash_noMbr/msms_FlashLFQ_QuantifiedBaseSequences.tsv",
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
 flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
-flash_no_mbr$peptide <- gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))
 ```
 
 ### moFF
 ```{r moff}
-moff <- read.delim("2019_datasets/moFF_SGPS_Galaxy/moFFMBR/Galaxy9-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular",
+moff <- read.delim("UPS/moff/moff_peptide_summary.tabular",
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- take_first_protein(moff$prot)
@@ -148,7 +147,7 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files('2019_datasets/moFF_SGPS_Galaxy/moFFnoMBR/peptide_summary/',
+moff_files <- list.files('UPS/moff_noMbr/peptide_summaries/',
                     full.names = TRUE)
 moff_no_mbr <- lapply(moff_files, function(i) read.delim(i, as.is = TRUE)) %>%
     join_all(by=c("peptide", "prot"), type = "full")
@@ -159,7 +158,7 @@ moff_no_mbr$prot <- take_first_protein(moff_no_mbr$prot)
 
 #### Peptides
 ```{r mqpep}
-mq <- read.delim("2019_datasets/MaxQuant_GUI/with_MBR/msms.txt",
+mq <- read.delim("UPS/MQ_1pep/peptides.txt",
                  stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
@@ -167,7 +166,7 @@ mq$prot <- take_first_protein(mq$prot)
 mq_names <- names(mq)
 
 # mq no mbr
-mq_no_mbr <- read.delim("2019_datasets/MaxQuant_GUI/no_MBR/msms.txt",
+mq_no_mbr <- read.delim("UPS/MQ_1pep_noMBR/peptides.txt",
                         stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
