@@ -119,19 +119,21 @@ options(stringsAsFactors = FALSE)
 ### FlashLFQ
 
 ```{r flash}
-flash <- read.delim("UPS/FlashLFQ_UPS/msms_FlashLFQ_QuantifiedBaseSequences.tsv",
+flash <- read.delim("2019_datasets/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
 flash$prot <- take_first_protein(flash$prot)
 flash_names <- names(flash)
+flash$peptide <- gsub("NH2-","", gsub("-COOH","", flash$peptide))
 
 # flash no mbr
-flash_no_mbr <- read.delim("UPS/flash_noMbr/msms_FlashLFQ_QuantifiedBaseSequences.tsv",
+flash_no_mbr <- read.delim("2019_datasets/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
 flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
+flash_no_mbr$peptide <- gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))
 ```
 
 ### moFF
