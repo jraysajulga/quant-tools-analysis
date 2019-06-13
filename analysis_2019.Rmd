@@ -160,7 +160,7 @@ moff_no_mbr$prot <- take_first_protein(moff_no_mbr$prot)
 
 #### Peptides
 ```{r mqpep}
-mq <- read.delim("UPS/MQ_1pep/peptides.txt",
+mq <- read.delim("2019_datasets/UPS/MQ_1pep/peptides.txt",
                  stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
@@ -168,7 +168,7 @@ mq$prot <- take_first_protein(mq$prot)
 mq_names <- names(mq)
 
 # mq no mbr
-mq_no_mbr <- read.delim("UPS/MQ_1pep_noMBR/peptides.txt",
+mq_no_mbr <- read.delim("2019_datasets/UPS/MQ_1pep_noMBR/peptides.txt",
                         stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
