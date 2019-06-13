@@ -138,7 +138,7 @@ flash_no_mbr$peptide <- gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))
 
 ### moFF
 ```{r moff}
-moff <- read.delim("UPS/moff/moff_peptide_summary.tabular",
+moff <- read.delim("2019_datasets/UPS/moff/Galaxy13-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular",
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- take_first_protein(moff$prot)
