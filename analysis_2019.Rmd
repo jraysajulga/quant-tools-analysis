@@ -143,6 +143,7 @@ moff <- read.delim("2019_datasets/UPS/moff/Galaxy13-[moFF_on_data_1,_data_2,_and
 # replace protein list with first protein
 moff$prot <- take_first_protein(moff$prot)
 moff_names <- names(moff)
+moff <- moff[,c(1,2,9,7,8,4,3,5,10,6)]
 ```
 
 When moFF is run without MBR, we need to combine all of the individual peptide summaries, which we do with `join_all` from `plyr`. 
