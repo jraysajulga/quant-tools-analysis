@@ -151,8 +151,12 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 # moff, no mbr
 moff_files <- list.files('2019_datasets/UPS/moff_noMbr/peptide\ summary/',
                     full.names = TRUE)
-moff_no_mbr <- lapply(moff_files, function(i) read.delim(i, as.is = TRUE)) %>%
-    join_all(by=c("peptide", "prot"), type = "full")
+#tail(unlist(str_split(moff_files[1], "/")), n=1)
+
+moff_no_mbr <- lapply(moff_files, function(i) df = read.delim(i, as.is = TRUE) %>% 
+  rename(!!paste("sumIntensity_20130510_EXQ1_IgPa_QC_",
+                 str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM)) %>%
+                        join_all(by=c("peptide", "prot"), type = "full")
 moff_no_mbr$prot <- take_first_protein(moff_no_mbr$prot)
 ```
 
@@ -276,7 +280,6 @@ peptides_normalize_and_test_de <- function(df,
                 "sd" = sd))
 }
 ```
-
 ```{r peptides, warning=FALSE,message=FALSE}
 norm_methods <- c("cyclicloess", "scale", "quantile", "vsn")
 quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
