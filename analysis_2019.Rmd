@@ -213,10 +213,10 @@ mq_prot_analysis <- function(proteinGroups, name){
 }
 
 # mq prot
-mq_data <- mq_prot_analysis("UPS/MQ_1pep/proteinGroups.txt", "MaxQuant")
+mq_data <- mq_prot_analysis("2019_datasets/UPS/MQ_1pep/proteinGroups.txt", "MaxQuant")
 
 # mq prot, no mbr
-mq_no_mbr_data <- mq_prot_analysis("UPS/MQ_1pep_noMBR/proteinGroups.txt", "MaxQuant_no_MBR")
+mq_no_mbr_data <- mq_prot_analysis("2019_datasets/UPS/MQ_1pep_noMBR/proteinGroups.txt", "MaxQuant_no_MBR")
 ```
 
 ## Differential expression analysis and ratio estimation
