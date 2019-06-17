@@ -418,6 +418,7 @@ kable(stat_table)
 rmsles_hi <- rmsles_low <- n_low <- n_hi <- rep(0, nrow(method_list))
 rmsles_low <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
+  if (i != 14){
     peca_loc <- results[[i]]$peca
     hi <- peca_loc %>%
         filter(ratios == 10) 
@@ -431,6 +432,7 @@ for (i in 1:nrow(method_list)){
         mean((log10(low$ratios) - log10(low$sr))^2, na.rm = TRUE)
     )
     n_low[i] <- nrow(filter(low, !is.na(sr)))
+  }
 }
 
 # maxquant, maxlfq, mbr
