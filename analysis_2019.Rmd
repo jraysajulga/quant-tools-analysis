@@ -293,6 +293,7 @@ results <- vector(length = nrow(method_list), mode = "list")
 # aucs <- rep(0, nrow(method_list))
 rmses <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
+  if (i != 14){
     df <- quants[[method_list$Var2[i]]]
     names_df <- names(df)
     ith_result <- peptides_normalize_and_test_de(df,
@@ -304,6 +305,7 @@ for (i in 1:nrow(method_list)){
     results[[i]] <- ith_result
     # aucs[i] <- ith_result$roc$auc
     rmses[i] <- ith_result$rmsle
+  }
 }
 
 all_df <- cbind(method_list, rmsle = rmses)
