@@ -404,7 +404,7 @@ stat_table <- rbind(stat_df, mq_stat, mq_no_mbr_stat) %>%
            tested = as.numeric(nprot_de)/40) %>%
     rename(TotalProtIDs = nprot,
            UpsDeProtDetected = nprot_de)
-write.table(stat_table, file="differential_expression_results.tab",
+write.table(stat_table, file="2019_results/differential_expression_results.tab",
             sep = "\t", quote = FALSE, row.names = FALSE)
 ```
 
@@ -477,7 +477,7 @@ mq_no_mbr <- c("Normalization" = "MaxLFQ",
 all_hilo <- rbind(hilo, mq_mbr, mq_no_mbr) %>%
     rename("Normalization" = Var1, "Tool" = Var2)
 
-write.table(all_hilo, file="high_low_fold_change_accuracy_new.tab",
+write.table(all_hilo, file="2019_results/high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
 
