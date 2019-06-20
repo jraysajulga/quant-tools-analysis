@@ -407,22 +407,28 @@ kable(stat_table)
 # High-Low Protein Abundance
 
 ```{r}
-rmsles_hi <- rmsles_low <- n_low <- n_hi <- rep(0, nrow(method_list))
+rmsles_hi <- rmsles_med <- rmsles_low <- n_low <- n_med <- n_hi <- rep(0, nrow(method_list))
 rmsles_low <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
     peca_loc <- results[[i]]$peca
     hi <- peca_loc %>%
         filter(ratios == 10) 
+    med <- peca_loc %>%
+        filter(ratios == 0.1 || ratios == 0.01)
     low <- peca_loc %>%
-        filter(ratios < 1)
+        filter(ratios == 0.001 || ratios == 0.0001)
     n_hi[i] <- nrow(filter(hi, !is.na(sr)))
     rmsles_hi[i] <- sqrt(
         mean((log10(hi$ratios) - log10(hi$sr))^2, na.rm = TRUE)
      )
+    n_med[i] <- nrow(filter(med, !is.na(sr)))
+    rmsles_med[i] <- sqrt(
+        mean((log10(med$ratios) - log10(med$sr))^2, na.rm = TRUE)
+     )
+    n_low[i] <- nrow(filter(low, !is.na(sr)))
     rmsles_low[i] <- sqrt(
         mean((log10(low$ratios) - log10(low$sr))^2, na.rm = TRUE)
     )
-    n_low[i] <- nrow(filter(low, !is.na(sr)))
 }
 
 # maxquant, maxlfq, mbr
@@ -456,7 +462,8 @@ mq_no_mbr_low_rmsle <- sqrt(
 )
 mq_no_mbr_n_low <- nrow(filter(mq_no_mbr_low, !is.na(sr)))
 
-hilo <- cbind(method_list, "high" = rmsles_hi, "nhi" = n_hi,
+himedlo <- cbind(method_list, "high" = rmsles_hi, "nhi" = n_hi,
+              "med" = rmsles_med, "nmed" = n_med,
               "low" = rmsles_low, "nlow" = n_low)
 
 mq_mbr <- c("Normalization" = "MaxLFQ",
@@ -477,10 +484,10 @@ mq_no_mbr <- c("Normalization" = "MaxLFQ",
             "low" = mq_no_mbr_low_rmsle,
             "nlow" = mq_no_mbr_n_low)
 
-all_hilo <- rbind(hilo, mq_mbr, mq_no_mbr) %>%
+all_himedlo <- rbind(himedlo, mq_mbr, mq_no_mbr) %>%
     rename("Normalization" = Var1, "Tool" = Var2)
 
-write.table(all_hilo, file="high_low_fold_change_accuracy_new.tab",
+write.table(all_himedlo, file="high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
 
