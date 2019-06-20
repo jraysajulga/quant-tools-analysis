@@ -316,7 +316,7 @@ all_df <- cbind(method_list, rmsle = rmses)
 fc_accuracy <- rbind(all_df, mq_data$rmlse, mq_no_mbr_data$rmlse) %>%
     rename("Normalization" = Var1,
            "Tool" = Var2) 
-write.table(fc_accuracy, file = "fold_change_accuracy.tabular",
+write.table(fc_accuracy, file = "2019_results/fold_change_accuracy.tabular",
             quote = FALSE,
             row.names = FALSE,
             sep = '\t')
