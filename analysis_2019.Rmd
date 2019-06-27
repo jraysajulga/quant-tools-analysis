@@ -107,7 +107,7 @@ The 2 protein files are MaxQuant's protein report (`proteinGroups.txt`), from Ma
 In the following, we read in all of the results files. In most cases, the protein IDs are in a list, separated by ";", so we use the function `take_first_protein()` to get the first protein in the list. 
 ```{r}
 take_first_protein <- function(prot_vec){
-    str_split(prot_vec, ";", simplify = TRUE)[, 1]
+    str_split(str_split(prot_vec, ",", simplify = TRUE)[, 1], ";", simplify = TRUE)[, 1]
 }
 ```
 
@@ -263,7 +263,7 @@ peptides_normalize_and_test_de <- function(df,
 
     df_peca_ratio <- df_peca %>%
         filter(ups == 1) %>%
-        mutate(protid = str_replace(prot, "^([OPQ].*)ups\\|.*", "\\1")) %>%
+        mutate(protid = str_replace(prot, "^([OPQ].*)ups(\\|.*)?", "\\1")) %>%
         mutate(protid = str_split(protid, "-", simplify = TRUE)[, 1]) %>%
         select(-prot) %>%
         left_join(ups_true_df, by = "protid") %>%
