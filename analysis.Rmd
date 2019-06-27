@@ -414,9 +414,9 @@ for (i in 1:nrow(method_list)){
     hi <- peca_loc %>%
         filter(ratios == 10) 
     med <- peca_loc %>%
-        filter(ratios == 0.1 || ratios == 0.01)
+        filter(ratios == 0.1 | ratios == 0.01)
     low <- peca_loc %>%
-        filter(ratios == 0.001 || ratios == 0.0001)
+        filter(ratios == 0.001 | ratios == 0.0001)
     n_hi[i] <- nrow(filter(hi, !is.na(sr)))
     rmsles_hi[i] <- sqrt(
         mean((log10(hi$ratios) - log10(hi$sr))^2, na.rm = TRUE)
@@ -435,10 +435,10 @@ for (i in 1:nrow(method_list)){
 mq_hi <- filter(mq_data$joined_mq, ratios == 10)
 mq_high_rmsle <- sqrt(mean((log10(mq_hi$ratios) - log10(mq_hi$sr))^2, na.rm = TRUE))
 mq_n_high <- nrow(filter(mq_hi, !is.na(sr)))
-mq_med <- filter(mq_data$joined_mq, ratios == 0.1 || ratios == 0.01)
+mq_med <- filter(mq_data$joined_mq, ratios == 0.1 | ratios == 0.01)
 mq_med_rmsle <- sqrt(mean((log10(mq_med$ratios) - log10(mq_med$sr))^2, na.rm = TRUE))
 mq_n_med <- nrow(filter(mq_med, !is.na(sr)))
-mq_low <- filter(mq_data$joined_mq, ratios == 0.001 || ratios == 0.0001)
+mq_low <- filter(mq_data$joined_mq, ratios == 0.001 | ratios == 0.0001)
 mq_low_rmsle <- sqrt(mean((log10(mq_low$ratios) - log10(mq_low$sr))^2, na.rm = TRUE))
 mq_n_low <- nrow(filter(mq_low, !is.na(sr)))
 
@@ -450,13 +450,13 @@ mq_no_mbr_high_rmsle <- sqrt(
 )
 mq_no_mbr_n_high <- nrow(filter(mq_no_mbr_hi, !is.na(sr)))
 # medium
-mq_no_mbr_med <- filter(mq_no_mbr_data$joined_mq, ratios == 0.1 || ratios == 0.01)
+mq_no_mbr_med <- filter(mq_no_mbr_data$joined_mq, ratios == 0.1 | ratios == 0.01)
 mq_no_mbr_med_rmsle <- sqrt(
     mean((log10(mq_no_mbr_med$ratios) - log10(mq_no_mbr_med$sr))^2, na.rm = TRUE)
 )
 mq_no_mbr_n_med <- nrow(filter(mq_no_mbr_med, !is.na(sr)))
 # low
-mq_no_mbr_low <- filter(mq_no_mbr_data$joined_mq, ratios == 0.001 || ratios == 0.0001)
+mq_no_mbr_low <- filter(mq_no_mbr_data$joined_mq, ratios == 0.001 | ratios == 0.0001)
 mq_no_mbr_low_rmsle <- sqrt(
     mean((log10(mq_no_mbr_low$ratios) - log10(mq_no_mbr_low$sr))^2, na.rm = TRUE)
 )
