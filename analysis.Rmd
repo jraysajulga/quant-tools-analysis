@@ -461,7 +461,6 @@ mq_no_mbr_low_rmsle <- sqrt(
     mean((log10(mq_no_mbr_low$ratios) - log10(mq_no_mbr_low$sr))^2, na.rm = TRUE)
 )
 mq_no_mbr_n_low <- nrow(filter(mq_no_mbr_low, !is.na(sr)))
-
 himedlo <- cbind(method_list, "high" = rmsles_hi, "nhi" = n_hi,
               "med" = rmsles_med, "nmed" = n_med,
               "low" = rmsles_low, "nlow" = n_low)
@@ -480,7 +479,7 @@ mq_no_mbr <- c("Normalization" = "MaxLFQ",
              "high" = mq_no_mbr_high_rmsle,
             "nhi" = mq_no_mbr_n_high,
             "med" = mq_med_rmsle,
-            "nmed" = mq_n_med,
+            "nmed" = mq_no_mbr_n_med,
             "low" = mq_no_mbr_low_rmsle,
             "nlow" = mq_no_mbr_n_low)
 
