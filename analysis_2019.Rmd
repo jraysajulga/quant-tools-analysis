@@ -119,7 +119,7 @@ options(stringsAsFactors = FALSE)
 ### FlashLFQ
 
 ```{r flash}
-flash <- read.delim("2019_datasets/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
+flash <- read.delim("2019_datasets-oldPSM/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -128,7 +128,7 @@ flash_names <- names(flash)
 flash$peptide <- gsub("NH2-","", gsub("-COOH","", flash$peptide))
 
 # flash no mbr
-flash_no_mbr <- read.delim("2019_datasets/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_no_mbr <- read.delim("2019_datasets-oldPSM/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -138,7 +138,7 @@ flash_no_mbr$peptide <- gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))
 
 ### moFF
 ```{r moff}
-moff <- read.delim("2019_datasets/UPS/moff/Galaxy13-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular",
+moff <- read.delim("2019_datasets-oldPSM/UPS/moff/Galaxy13-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular",
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- take_first_protein(moff$prot)
@@ -150,13 +150,13 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files('2019_datasets/UPS/moff_noMbr/peptide\ summary/',
+moff_files <- list.files('2019_datasets-oldPSM/UPS/moff_noMbr/peptide\ summary/',
                     full.names = TRUE)
 #tail(unlist(str_split(moff_files[1], "/")), n=1)
 
 moff_no_mbr <- lapply(moff_files, function(i) df = read.delim(i, as.is = TRUE) %>% 
   rename(!!paste("sumIntensity_20130510_EXQ1_IgPa_QC_",
-                 str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM)) %>%
+                 str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS1n2)) %>%
                         join_all(by=c("peptide", "prot"), type = "full")
 moff_no_mbr$prot <- take_first_protein(moff_no_mbr$prot)
 ```
