@@ -32,6 +32,18 @@ abrfprots <- c("BGAL", "LYSC", "ASPNC", "PROTEING")
 
 
 ## FlashLFQ
+### Without match-between-runs (no MBR)
+```{r}
+flash <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashnoMBR/Galaxy144-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE)
+
+# Aggregate intensities for each protein and each sample
+sapply(abrfprots, function(x){ 
+    flash %>% filter(grepl(x,Protein.Groups)) %>%
+    group_by(Protein.Groups) %>%
+    summarise_if(is.numeric, sum)
+  })
+```
+
 ### With match-between runs (with MBR)
 ```{r}
 flash_mbr <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE)
@@ -43,15 +55,23 @@ sapply(abrfprots, function(x){
     summarise_if(is.numeric, sum)
   })
 ```
+
+
+## moFF
 ### Without match-between-runs (no MBR)
 ```{r}
-flash <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashnoMBR/Galaxy144-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE)
+moff <- read.delim("2019_datasets/ABRF/moFF_SGPS_Galaxy/moFFMBR/Galaxy9-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
-    flash %>% filter(grepl(x,Protein.Groups)) %>%
-    group_by(Protein.Groups) %>%
+    moff %>% filter(grepl(x, prot)) %>%
+    group_by(prot) %>%
     summarise_if(is.numeric, sum)
   })
+```
+
+### With match-between runs (with MBR)
+```{r}
+
 ```
 
