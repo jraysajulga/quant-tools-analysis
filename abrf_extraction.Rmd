@@ -36,10 +36,11 @@ abrfprots <- c("BGAL", "LYSC", "ASPNC", "PROTEING")
 flash <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular",
                     stringsAsFactors = FALSE)
 
-#filter(flash, grepl("LYSC",Protein.Groups))
-
-flash %>% filter(grepl("LYSC",Protein.Groups)) %>%
-  group_by(Protein.Groups) %>%
-  summarise_if(is.numeric, sum)
+# Aggregate intensities for each protein and each sample
+sapply(abrfprots, function(x){ 
+    flash %>% filter(grepl(x,Protein.Groups)) %>%
+    group_by(Protein.Groups) %>%
+    summarise_if(is.numeric, sum)
+  })
 ```
 
