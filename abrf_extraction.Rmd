@@ -1,0 +1,45 @@
+---
+title: "LFQ comparison"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(dplyr)
+library(stringr)
+library(limma)
+library(PECA)
+library(vsn)
+library(pROC)
+library(kableExtra)
+library(ggplot2)
+```
+
+## ABRF
+
+Let's define which proteins to examine:
+
+```{r}
+# ABRF-1: Beta Galactosidase from E Coli
+# ABRF-2: Lysozyme from Gallus gallus
+# ABRF-3: Amylase from Aspergillus
+# ABRF-4: Protein G Streptococcus
+abrfprots <- c("BGAL", "LYSC", "ASPNC", "PROTEING")
+```
+
+
+## FlashLFQ
+```{r}
+flash <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular",
+                    stringsAsFactors = FALSE)
+
+#filter(flash, grepl("LYSC",Protein.Groups))
+
+flash %>% filter(grepl("LYSC",Protein.Groups)) %>%
+  group_by(Protein.Groups) %>%
+  summarise_if(is.numeric, sum)
+```
+
