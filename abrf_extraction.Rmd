@@ -44,7 +44,7 @@ sapply(abrfprots, function(x){
   })
 ```
 
-### With match-between runs (with MBR)
+### With match-between-runs (with MBR)
 ```{r}
 flash_mbr <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE)
 
@@ -78,20 +78,50 @@ sapply(abrfprots, function(x){
   })
 ```
 
-### With match-between runs (with MBR)
+### With match-between-runs (with MBR)
 ```{r}
-moff <- read.delim("2019_datasets/ABRF/moFF_SGPS_Galaxy/moFFMBR/Galaxy9-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular", stringsAsFactors = FALSE)
+moff_mbr <- read.delim("2019_datasets/ABRF/moFF_SGPS_Galaxy/moFFMBR/Galaxy9-[moFF_on_data_1,_data_2,_and_others__peptide_summary].tabular", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
-    moff %>% filter(grepl(x, prot)) %>%
+    moff_mbr %>% filter(grepl(x, prot)) %>%
     group_by(prot) %>%
     summarise_if(is.numeric, sum)
   })
 ```
 
-
+## MaxQuant
+### Without match-between-runs (no MBR) 
 ```{r}
-
+maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/no_MBR/msms.txt", stringsAsFactors = FALSE)
+maxquant
 ```
+```{r}
+# Aggregate intensities for each protein and each sample
+sapply(abrfprots, function(x){ 
+    maxquant %>%# select(Raw.file, Proteins, Sequence) %>%
+      filter(grepl(x, Proteins))# %>%
+    #group_by(Proteins) #%>%
+    #summarise_if(is.numeric, sum)
+  })
+```
+```{r}
+maxquant
+```
+
+
+### With match-between-runs (with MBR)
+```{r}
+maxquant_mbr <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/msms.txt", stringsAsFactors = FALSE)
+maxquant_mbr
+```
+```{r}
+# Aggregate intensities for each protein and each sample
+sapply(abrfprots, function(x){ 
+    maxquant_mbr %>% filter(grepl(x, prot)) %>%
+    group_by(prot) %>%
+    summarise_if(is.numeric, sum)
+  })
+```
+
 
