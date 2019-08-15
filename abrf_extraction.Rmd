@@ -94,26 +94,30 @@ sapply(abrfprots, function(x){
 ### Without match-between-runs (no MBR) 
 ```{r}
 maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/no_MBR/msms.txt", stringsAsFactors = FALSE)
-maxquant
-```
-```{r}
+
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
-    maxquant %>%# select(Raw.file, Proteins, Sequence) %>%
-      filter(grepl(x, Proteins))# %>%
-    #group_by(Proteins) #%>%
-    #summarise_if(is.numeric, sum)
+  test <- maxquant %>% select(Raw.file, Proteins, Intensities) %>%
+    filter(grepl(x, Proteins)) %>%
+    group_by(Raw.file) %>%
+    summarise(intensity = sum(as.numeric(unlist(strsplit(Intensities, ';')))))
+  print(test)
   })
-```
-```{r}
-maxquant
 ```
 
 
 ### With match-between-runs (with MBR)
 ```{r}
 maxquant_mbr <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/msms.txt", stringsAsFactors = FALSE)
-maxquant_mbr
+
+# Aggregate intensities for each protein and each sample
+sapply(abrfprots, function(x){ 
+  test <- maxquant_mbr %>% select(Raw.file, Proteins, Intensities) %>%
+    filter(grepl(x, Proteins)) %>%
+    group_by(Raw.file) %>%
+    summarise(intensity = sum(as.numeric(unlist(strsplit(Intensities, ';')))))
+  print(test)
+  })
 ```
 ```{r}
 # Aggregate intensities for each protein and each sample
