@@ -119,7 +119,7 @@ options(stringsAsFactors = FALSE)
 ### FlashLFQ
 
 ```{r flash}
-flash <- read.delim("2019_datasets-072919/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
+flash <- read.delim("2019_datasets-072919/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv]-081319.tabular",
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -128,7 +128,7 @@ flash_names <- names(flash)
 flash$peptide <- gsub("NH2-","", gsub("-COOH","", flash$peptide))
 
 # flash no mbr
-flash_no_mbr <- read.delim("2019_datasets-072919/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_no_mbr <- read.delim("2019_datasets-072919/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv]-081319.tabular",
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
