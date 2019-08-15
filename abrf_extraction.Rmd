@@ -119,13 +119,5 @@ sapply(abrfprots, function(x){
   print(test)
   })
 ```
-```{r}
-# Aggregate intensities for each protein and each sample
-sapply(abrfprots, function(x){ 
-    maxquant_mbr %>% filter(grepl(x, prot)) %>%
-    group_by(prot) %>%
-    summarise_if(is.numeric, sum)
-  })
-```
 
 
