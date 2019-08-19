@@ -93,31 +93,34 @@ sapply(abrfprots, function(x){
 ## MaxQuant
 ### Without match-between-runs (no MBR) 
 ```{r}
-maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/no_MBR/msms.txt", stringsAsFactors = FALSE)
+maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/no_MBR/peptides.txt", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
-  test <- maxquant %>% select(Raw.file, Proteins, Intensities) %>%
-    filter(grepl(x, Proteins)) %>%
-    group_by(Raw.file) %>%
-    summarise(intensity = sum(as.numeric(unlist(strsplit(Intensities, ';')))))
-  print(test)
-  })
+  if (x == "BGAL"){
+    x <- "BGAL_ECOLI"
+  }
+  maxquant %>% filter(grepl(x, Proteins)) %>%
+    select(Proteins, Intensity.1, Intensity.2, Intensity.3, Intensity.4) %>%
+    group_by(Proteins) %>%
+    summarise_if(is.numeric, sum)
+})
 ```
-
 
 ### With match-between-runs (with MBR)
 ```{r}
-maxquant_mbr <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/msms.txt", stringsAsFactors = FALSE)
+maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/peptides.txt", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
-  test <- maxquant_mbr %>% select(Raw.file, Proteins, Intensities) %>%
-    filter(grepl(x, Proteins)) %>%
-    group_by(Raw.file) %>%
-    summarise(intensity = sum(as.numeric(unlist(strsplit(Intensities, ';')))))
-  print(test)
-  })
+  if (x == "BGAL"){
+    x <- "BGAL_ECOLI"
+  }
+  maxquant %>% filter(grepl(x, Proteins)) %>%
+    select(Proteins, Intensity.1, Intensity.2, Intensity.3, Intensity.4) %>%
+    group_by(Proteins) %>%
+    summarise_if(is.numeric, sum)
+})
 ```
 
 
