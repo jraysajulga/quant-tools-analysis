@@ -132,3 +132,43 @@ joined_peptides <- merge(flash %>% select(Sequence, flash_sample1 = Intensity_AB
 write.table(joined_peptides, file = "flash_moff_sample1_peptides.tab", quote = FALSE, row.names = FALSE)
 ```
 
+
+
+## Identified vs Quantified
+
+# MaxQuant
+```{r}
+mq_msms <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/msms.txt", stringsAsFactors = FALSE)
+length(unique(maxquant$Sequence))
+length(unique(mq_msms$Sequence))
+setdiff(unique(maxquant$Sequence) , unique(mq_msms$Sequence))
+```
+```{r}
+length(unique(maxquant$Sequence))
+length(unique(mq_msms$Sequence))
+setdiff(unique(maxquant$Sequence) , unique(mq_msms$Sequence))
+```
+
+# moFF
+```{r}
+length(unique(moff_mbr$peptide))
+```
+
+# flashLFQ
+```{r}
+length(unique(flash_mbr$Sequence))
+```
+
+## Write peptide tables out
+
+```{r}
+#write.table(unique(mq$peptide), file="peptides/ABRF/mq_peptides.tab",
+#            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+write.table(unique(moff_mbr$peptide), file="peptides/ABRF/moff_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+write.table(unique(flash_mbr$Sequence), file="peptides/ABRF/flash_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+```
+
+
+
