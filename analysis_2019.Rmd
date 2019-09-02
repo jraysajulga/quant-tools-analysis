@@ -125,7 +125,9 @@ flash <- read.delim("2019_datasets-072919/UPS/FlashLFQ_UPS/Galaxy104-[FlashLFQ_o
     select(peptide, prot, starts_with("Intensity"))
 flash$prot <- take_first_protein(flash$prot)
 flash_names <- names(flash)
-flash$peptide <- gsub("NH2-","", gsub("-COOH","", flash$peptide))
+flash$peptide <- gsub("<cmm>","",
+                      gsub("<ox>","",
+                           gsub("NH2-","", gsub("-COOH","", flash$peptide))))
 
 # flash no mbr
 flash_no_mbr <- read.delim("2019_datasets-072919/UPS/flash_noMbr/Galaxy100-[FlashLFQ_on_data_39,_data_38,_and_others__QuantifiedPeptides.tsv]-081319.tabular",
@@ -133,7 +135,9 @@ flash_no_mbr <- read.delim("2019_datasets-072919/UPS/flash_noMbr/Galaxy100-[Flas
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
 flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
-flash_no_mbr$peptide <- gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))
+flash_no_mbr$peptide <- gsub("<cmm>","",
+                      gsub("<ox>","",
+                           gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))))
 ```
 
 ### moFF
@@ -530,10 +534,10 @@ length(unique(flash$Sequence))
 ## Write peptide tables out
 
 ```{r}
-write.table(unique(mq$peptide), file="peptides/mq_peptides.tab",
+write.table(unique(mq$peptide), file="peptides/UPS/mq_peptides.tab",
             sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-write.table(unique(moff$peptide), file="peptides/moff_peptides.tab",
+write.table(unique(moff$peptide), file="peptides/UPS/moff_peptides.tab",
             sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-write.table(unique(flash$Sequence), file="peptides/flash_peptides.tab",
+write.table(unique(flash$peptide), file="peptides/UPS/flash_peptides.tab",
             sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
 ```
