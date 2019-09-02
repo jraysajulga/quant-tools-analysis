@@ -509,7 +509,6 @@ mq_msms <- read.delim("2019_datasets/UPS/MQ_1pep/msms.txt", stringsAsFactors = F
 length(unique(mq$peptide)) 
 length(unique(mq_msms$Sequence))
 setdiff(unique(mq$peptide) , unique(mq_msms$Sequence))
-mq[mq$peptide == "AAVIEAMTK",]
 ```
 
 # PSM Report
@@ -520,8 +519,21 @@ length(unique(psm_rep$Sequence))
 
 # moFF
 ```{r}
-moff
+length(unique(moff$peptide))
 ```
 
+# flashLFQ
+```{r}
+length(unique(flash$Sequence))
+```
 
+## Write peptide tables out
 
+```{r}
+write.table(unique(mq$peptide), file="mq_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE)
+write.table(unique(moff$peptide), file="moff_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE)
+write.table(unique(flash$Sequence), file="flash_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE)
+```
