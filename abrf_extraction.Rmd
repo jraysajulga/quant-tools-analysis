@@ -127,7 +127,8 @@ sapply(abrfprots, function(x){
 
 ## Join peptides from moFF and flash (no MBR)
 ```{r}
-merge(flash %>% select(Sequence, flash_sample1 = Intensity_ABRF_2016_40Y_1_Sample1),
+joined_peptides <- merge(flash %>% select(Sequence, flash_sample1 = Intensity_ABRF_2016_40Y_1_Sample1),
       moff_no_mbr %>% select(Sequence, moff_sample1= Intensity_ABRF_2016_40Y_1_Sample1), by="Sequence")
+write.table(joined_peptides, file = "flash_moff_sample1_peptides.tab", quote = FALSE, row.names = FALSE)
 ```
 
