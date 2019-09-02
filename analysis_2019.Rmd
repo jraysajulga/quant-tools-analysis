@@ -500,3 +500,15 @@ write.table(all_himedlo, file="2019_results/high_low_fold_change_accuracy_new.ta
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
 
+
+## Identified vs Quantified
+```{r}
+mq_msms <- read.delim("2019_datasets/UPS/MQ_1pep/msms.txt", stringsAsFactors = FALSE)
+length(unique(mq$peptide)) 
+length(unique(mq_msms$Sequence))
+setdiff(unique(mq$peptide) , unique(mq_msms$Sequence))
+mq[mq$peptide == "AAVIEAMTK",]
+```
+
+
+
