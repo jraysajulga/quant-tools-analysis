@@ -530,10 +530,10 @@ length(unique(flash$Sequence))
 ## Write peptide tables out
 
 ```{r}
-write.table(unique(mq$peptide), file="mq_peptides.tab",
-            sep="\t", quote=FALSE, row.names=FALSE)
-write.table(unique(moff$peptide), file="moff_peptides.tab",
-            sep="\t", quote=FALSE, row.names=FALSE)
-write.table(unique(flash$Sequence), file="flash_peptides.tab",
-            sep="\t", quote=FALSE, row.names=FALSE)
+write.table(unique(mq$peptide), file="peptides/mq_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+write.table(unique(moff$peptide), file="peptides/moff_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+write.table(unique(flash$Sequence), file="peptides/flash_peptides.tab",
+            sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
 ```
