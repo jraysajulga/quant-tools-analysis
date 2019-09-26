@@ -199,6 +199,21 @@ data_rp
 #                     group = group)
 # data_rp
 # df_rp
+#moff_MQ
+#FLASHLFQ_MQ
+#FlashLFQ_moFF
+```
+```{r}
+"moFF versus MaxQuant"
+cor.test(x = data_rp$moff_intensity, y = data_rp$maxquant_intensity, method = 'pearson')
+"FlashLFQ versus MaxQuant"
+cor.test(x = data_rp$flash_intensity, y = data_rp$maxquant_intensity, method = 'pearson')
+"FlashLFQ versus moFF"
+cor.test(x = data_rp$flash_intensity, y = data_rp$moff_intensity, method = 'pearson')
+```
+
+
+```{r}
 p <- plot_ly(data = data_rp, x = ~flash_intensity, y = ~maxquant_intensity)
 p
 ```
