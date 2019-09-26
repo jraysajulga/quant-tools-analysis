@@ -182,29 +182,24 @@ flash_rp <- flash_mbr %>% select(peptide = Sequence, flash_intensity = Intensity
 moff_rp <- moff_mbr %>% select(peptide, moff_intensity = sumIntensity_ABRF_2016_40Y_1_Sample4)
 maxquant_rp <- maxquant_mbr %>% select(peptide = Sequence, maxquant_intensity = Intensity.4)
 ```
-```{r}
-rep(500, length(data_rp$flash_intensity))
-```
-```{r}
-rep(0,5)
-```
 
 ```{r}
 library(plotly)
 data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>% mutate("concentration (fmol)" = 500)
-x <- c(data_rp$flash_intensity, data_rp$moff_intensity, data_rp$maxquant_intensity)
-y <- c(rep(500, length(data_rp$flash_intensity)),
-       rep(500, length(data_rp$moff_intensity)),
-       rep(500, length(data_rp$maxquant_intensity)))
-group <- c(rep("flash", length(data_rp$flash_intensity)),
-           rep("moff", length(data_rp$moff_intensity)),
-           rep("maxquant", length(data_rp$maxquant_intensity)))
-df_rp <- data.frame(x = x,
-                    y = y,
-                    group = group)
 data_rp
-df_rp
-p <- plot_ly(data = df_rp, x = x, y = y, color = group)
+# x <- c(data_rp$flash_intensity, data_rp$moff_intensity, data_rp$maxquant_intensity)
+# y <- c(rep(500, length(data_rp$flash_intensity)),
+#        rep(500, length(data_rp$moff_intensity)),
+#        rep(500, length(data_rp$maxquant_intensity)))
+# group <- c(rep("flash", length(data_rp$flash_intensity)),
+#            rep("moff", length(data_rp$moff_intensity)),
+#            rep("maxquant", length(data_rp$maxquant_intensity)))
+# df_rp <- data.frame(x = x,
+#                     y = y,
+#                     group = group)
+# data_rp
+# df_rp
+p <- plot_ly(data = data_rp, x = ~flash_intensity, y = ~maxquant_intensity)
 p
 ```
 
