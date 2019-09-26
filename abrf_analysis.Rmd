@@ -182,10 +182,17 @@ flash_rp <- flash_mbr %>% select(peptide = Sequence, flash_intensity = Intensity
 moff_rp <- moff_mbr %>% select(peptide, moff_intensity = sumIntensity_ABRF_2016_40Y_1_Sample4)
 maxquant_rp <- maxquant_mbr %>% select(peptide = Sequence, maxquant_intensity = Intensity.4)
 ```
+```{r}
+data_rp$flash_intensity[1:5]
+log2(data_rp$flash_intensity[1:5])
+```
 
 ```{r}
 library(plotly)
-data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>% mutate("concentration (fmol)" = 500)
+data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>% mutate("concentration (fmol)" = 500) %>%
+  mutate(flash_intensity = log2(flash_intensity),
+         moff_intensity = log2(moff_intensity),
+         maxquant_intensity = log2(maxquant_intensity))
 data_rp
 # x <- c(data_rp$flash_intensity, data_rp$moff_intensity, data_rp$maxquant_intensity)
 # y <- c(rep(500, length(data_rp$flash_intensity)),
@@ -203,13 +210,30 @@ data_rp
 #FLASHLFQ_MQ
 #FlashLFQ_moFF
 ```
+
 ```{r}
+data_rp$maxquant_intensity[4] == "-Inf"
+is.na(data_rp$maxquant_intensity[4])
+data_rp$maxquant_intensity[5]
+is.na(data_rp$maxquant_intensity[5])
+```
+
+```{r}
+data_rp %>%
+  filter(is.na(flash_intensity))
+```
+```{r}
+function ()
+```
+
+```{r}
+data_rp[data_rp == "-Inf"] <- NA
 "moFF versus MaxQuant"
-cor.test(x = data_rp$moff_intensity, y = data_rp$maxquant_intensity, method = 'pearson')
+cor.test(x = data_rp$moff_intensity, y = data_rp$maxquant_intensity, method = 'pearson', use="complete.obs")
 "FlashLFQ versus MaxQuant"
-cor.test(x = data_rp$flash_intensity, y = data_rp$maxquant_intensity, method = 'pearson')
+cor.test(x = data_rp$flash_intensity, y = data_rp$maxquant_intensity, method = 'pearson', use="complete.obs")
 "FlashLFQ versus moFF"
-cor.test(x = data_rp$flash_intensity, y = data_rp$moff_intensity, method = 'pearson')
+cor.test(x = data_rp$flash_intensity, y = data_rp$moff_intensity, method = 'pearson', use="complete.obs")
 ```
 
 
