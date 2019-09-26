@@ -178,21 +178,39 @@ write.table(unique(flash_mbr$Sequence), file="peptides/ABRF/flash_peptides.tab",
 # Regression Plot
 
 ```{r}
-flash_rp <- flash_mbr %>% select(peptide = Sequence, flash_intensity = Intensity_ABRF_2016_40Y_1_Sample4)
-moff_rp <- moff_mbr %>% select(peptide, moff_intensity = sumIntensity_ABRF_2016_40Y_1_Sample4)
-maxquant_rp <- maxquant_mbr %>% select(peptide = Sequence, maxquant_intensity = Intensity.4)
+flash_rp <- flash_mbr %>% select(peptide = Sequence,
+                                 flash_intensity1 = Intensity_ABRF_2016_40Y_1_Sample1,
+                                 flash_intensity2 = Intensity_ABRF_2016_40Y_1_Sample2,
+                                 flash_intensity3 = Intensity_ABRF_2016_40Y_1_Sample3,
+                                 flash_intensity4 = Intensity_ABRF_2016_40Y_1_Sample4)
+moff_rp <- moff_mbr %>% select(peptide, 
+                               moff_intensity1 = sumIntensity_ABRF_2016_40Y_1_Sample1,
+                               moff_intensity2 = sumIntensity_ABRF_2016_40Y_1_Sample2,
+                               moff_intensity3 = sumIntensity_ABRF_2016_40Y_1_Sample3,
+                               moff_intensity4 = sumIntensity_ABRF_2016_40Y_1_Sample4)
+maxquant_rp <- maxquant_mbr %>% select(peptide = Sequence, 
+                                       maxquant_intensity1 = Intensity.1,
+                                       maxquant_intensity2 = Intensity.2,
+                                       maxquant_intensity3 = Intensity.3,
+                                       maxquant_intensity4 = Intensity.4)
 ```
-```{r}
-data_rp$flash_intensity[1:5]
-log2(data_rp$flash_intensity[1:5])
-```
+
 
 ```{r}
 library(plotly)
-data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>% mutate("concentration (fmol)" = 500) %>%
-  mutate(flash_intensity = log2(flash_intensity),
-         moff_intensity = log2(moff_intensity),
-         maxquant_intensity = log2(maxquant_intensity))
+data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>%
+  mutate(flash_intensity1 = log2(flash_intensity1),
+         flash_intensity2 = log2(flash_intensity2),
+         flash_intensity3 = log2(flash_intensity3),
+         flash_intensity4 = log2(flash_intensity4),
+         moff_intensity1 = log2(moff_intensity1),
+         moff_intensity2 = log2(moff_intensity2),
+         moff_intensity3 = log2(moff_intensity3),
+         moff_intensity4 = log2(moff_intensity4),
+         maxquant_intensity1 = log2(maxquant_intensity1),
+         maxquant_intensity2 = log2(maxquant_intensity2),
+         maxquant_intensity3 = log2(maxquant_intensity3),
+         maxquant_intensity4 = log2(maxquant_intensity4))
 data_rp
 # x <- c(data_rp$flash_intensity, data_rp$moff_intensity, data_rp$maxquant_intensity)
 # y <- c(rep(500, length(data_rp$flash_intensity)),
@@ -212,28 +230,21 @@ data_rp
 ```
 
 ```{r}
-data_rp$maxquant_intensity[4] == "-Inf"
-is.na(data_rp$maxquant_intensity[4])
-data_rp$maxquant_intensity[5]
-is.na(data_rp$maxquant_intensity[5])
-```
-
-```{r}
-data_rp %>%
-  filter(is.na(flash_intensity))
-```
-```{r}
-function ()
-```
-
-```{r}
 data_rp[data_rp == "-Inf"] <- NA
-"moFF versus MaxQuant"
-cor.test(x = data_rp$moff_intensity, y = data_rp$maxquant_intensity, method = 'pearson', use="complete.obs")
-"FlashLFQ versus MaxQuant"
-cor.test(x = data_rp$flash_intensity, y = data_rp$maxquant_intensity, method = 'pearson', use="complete.obs")
-"FlashLFQ versus moFF"
-cor.test(x = data_rp$flash_intensity, y = data_rp$moff_intensity, method = 'pearson', use="complete.obs")
+corr_data <- data.frame(moff_mq = c(cor.test(x = data_rp$moff_intensity1, y = data_rp$maxquant_intensity1, method = 'pearson')$estimate,
+                    cor.test(x = data_rp$moff_intensity2, y = data_rp$maxquant_intensity2, method = 'pearson')$estimate,
+                    cor.test(x = data_rp$moff_intensity3, y = data_rp$maxquant_intensity3, method = 'pearson')$estimate,
+                    cor.test(x = data_rp$moff_intensity4, y = data_rp$maxquant_intensity4, method = 'pearson')$estimate),
+           flash_mq = c(cor.test(x = data_rp$flash_intensity1, y = data_rp$maxquant_intensity1, method = 'pearson')$estimate,
+                     cor.test(x = data_rp$flash_intensity2, y = data_rp$maxquant_intensity2, method = 'pearson')$estimate,
+                     cor.test(x = data_rp$flash_intensity3, y = data_rp$maxquant_intensity3, method = 'pearson')$estimate,
+                     cor.test(x = data_rp$flash_intensity4, y = data_rp$maxquant_intensity4, method = 'pearson')$estimate),
+           flash_moff = c(cor.test(x = data_rp$flash_intensity1, y = data_rp$moff_intensity1, method = 'pearson')$estimate,
+                        cor.test(x = data_rp$flash_intensity2, y = data_rp$moff_intensity2, method = 'pearson')$estimate,
+                        cor.test(x = data_rp$flash_intensity3, y = data_rp$moff_intensity3, method = 'pearson')$estimate,
+                        cor.test(x = data_rp$flash_intensity4, y = data_rp$moff_intensity4, method = 'pearson')$estimate))
+row.names(corr_data) <- c("sample 1", "sample 2", "sample 3", "sample 4")
+corr_data
 ```
 
 
