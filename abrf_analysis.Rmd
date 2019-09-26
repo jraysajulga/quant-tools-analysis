@@ -47,7 +47,11 @@ sapply(abrfprots, function(x){
 
 ### With match-between-runs (with MBR)
 ```{r}
-flash_mbr <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE)
+flash_mbr <- read.delim("2019_datasets/ABRF/FLASH_SGPS_Galaxy/flashMBR/Galaxy148-[FlashLFQ_on_data_141,_data_140,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
+  mutate(Sequence = gsub("NH2-", "",
+                         gsub("-COOH", "",
+                              gsub("<cmm>","",
+                                   gsub("<ox>","", Sequence)))))
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
@@ -56,7 +60,6 @@ sapply(abrfprots, function(x){
     summarise_if(is.numeric, sum)
   })
 ```
-
 
 ## moFF
 ### Without match-between-runs (no MBR)
@@ -111,14 +114,14 @@ sapply(abrfprots, function(x){
 
 ### With match-between-runs (with MBR)
 ```{r}
-maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/peptides.txt", stringsAsFactors = FALSE)
+maxquant_mbr <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/peptides.txt", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
   if (x == "BGAL"){
     x <- "BGAL_ECOLI"
   }
-  maxquant %>% filter(grepl(x, Proteins)) %>%
+  maxquant_mbr %>% filter(grepl(x, Proteins)) %>%
     select(Proteins, Intensity.1, Intensity.2, Intensity.3, Intensity.4) %>%
     group_by(Proteins) %>%
     summarise_if(is.numeric, sum)
@@ -171,4 +174,37 @@ write.table(unique(flash_mbr$Sequence), file="peptides/ABRF/flash_peptides.tab",
 ```
 
 
+
+# Regression Plot
+
+```{r}
+flash_rp <- flash_mbr %>% select(peptide = Sequence, flash_intensity = Intensity_ABRF_2016_40Y_1_Sample4)
+moff_rp <- moff_mbr %>% select(peptide, moff_intensity = sumIntensity_ABRF_2016_40Y_1_Sample4)
+maxquant_rp <- maxquant_mbr %>% select(peptide = Sequence, maxquant_intensity = Intensity.4)
+```
+```{r}
+rep(500, length(data_rp$flash_intensity))
+```
+```{r}
+rep(0,5)
+```
+
+```{r}
+library(plotly)
+data_rp <- join_all(list(flash_rp, moff_rp, maxquant_rp), by="peptide") %>% mutate("concentration (fmol)" = 500)
+x <- c(data_rp$flash_intensity, data_rp$moff_intensity, data_rp$maxquant_intensity)
+y <- c(rep(500, length(data_rp$flash_intensity)),
+       rep(500, length(data_rp$moff_intensity)),
+       rep(500, length(data_rp$maxquant_intensity)))
+group <- c(rep("flash", length(data_rp$flash_intensity)),
+           rep("moff", length(data_rp$moff_intensity)),
+           rep("maxquant", length(data_rp$maxquant_intensity)))
+df_rp <- data.frame(x = x,
+                    y = y,
+                    group = group)
+data_rp
+df_rp
+p <- plot_ly(data = df_rp, x = x, y = y, color = group)
+p
+```
 
