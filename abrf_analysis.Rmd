@@ -243,8 +243,9 @@ corr_data <- data.frame(moff_mq = c(cor.test(x = data_rp$moff_intensity1, y = da
                         cor.test(x = data_rp$flash_intensity2, y = data_rp$moff_intensity2, method = 'pearson')$estimate,
                         cor.test(x = data_rp$flash_intensity3, y = data_rp$moff_intensity3, method = 'pearson')$estimate,
                         cor.test(x = data_rp$flash_intensity4, y = data_rp$moff_intensity4, method = 'pearson')$estimate))
-row.names(corr_data) <- c("sample 1", "sample 2", "sample 3", "sample 4")
+row.names(corr_data) <- c("sample1", "sample2", "sample3", "sample4")
 corr_data
+write.table(corr_data, file="correlation_data.tab", quote=FALSE, sep="\t")
 ```
 
 
