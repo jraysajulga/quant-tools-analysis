@@ -178,7 +178,7 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files('Quant\ Paper\ Redone_11102019/UPS/moff/noMBR\ without\ normalization/moFF\ on\ collection\ 134:\ peptide\ summary',
+moff_files <- list.files('Quant\ Paper\ Redone_11102019/UPS/moff/noMBR\ without\ normalization/peptide\ summary/',
                     full.names = TRUE)
 #tail(unlist(str_split(moff_files[1], "/")), n=1)
 
