@@ -264,11 +264,14 @@ peptides_normalize_and_test_de <- function(df,
                               grp1_col_name,
                               grp2_col_name){
     if (norm_method == "vsn"){
-        intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
+      intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
+    } else if (norm_method != 'NA') {
+      intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])),
+                                                      method = norm_method))
     } else {
-        intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])),
-                                                        method = norm_method))
+      intensities <- as.matrix(df[, int_col_vec])
     }
+    
     df_norm <- data.frame(peptide = df$peptide,
                           prot = df$prot,
                           intensities,
@@ -315,8 +318,12 @@ quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
                    "FlashLFQ_no_MBR", "MaxQuant", "MaxQuant_no_MBR")
 quants <- list("moFF" = moff,  "moFF_no_MBR" = moff_no_mbr,
                "FlashLFQ" = flash, "FlashLFQ_no_MBR" = flash_no_mbr,
-               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr)
+               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr,
+               "FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
 method_list <- expand.grid(norm_methods, quant_methods, stringsAsFactors = FALSE)
+method_list <- rbind(method_list,
+                     c('NA', 'FlashLFQ_norm'),
+                     c('NA', 'FlashLFQ_no_MBR_norm'))
 results <- vector(length = nrow(method_list), mode = "list")
 # aucs <- rep(0, nrow(method_list))
 rmses <- rep(0, nrow(method_list))
