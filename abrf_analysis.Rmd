@@ -34,7 +34,7 @@ abrfprots <- c("BGAL", "LYSC", "ASPNC", "PROTEING")
 ## FlashLFQ
 ### Without match-between-runs (no MBR and no normalization)
 ```{r}
-flash <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/noMBR\ without\ normalization/Galaxy167-[FlashLFQ_on_data_99,_data_73,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
+flash <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/noMBR\ without\ normalization/Galaxy173-[FlashLFQ_on_data_99,_data_53,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
                 mutate(Sequence = gsub("<cmm>", "", str_match(Sequence, "NH2-(.+)-COOH")[,2]))
 
 # Aggregate intensities for each protein and each sample
@@ -47,7 +47,7 @@ sapply(abrfprots, function(x){
 
 ### With match-between-runs (with MBR and no normalization)
 ```{r}
-flash_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/MBR\ without\ normalization/Galaxy160-[FlashLFQ_on_data_99,_data_73,_and_others__QuantifiedPeaks.tsv].tabular", stringsAsFactors = FALSE) %>%
+flash_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/MBR\ without\ normalization/Galaxy179-[FlashLFQ_on_data_99,_data_53,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
   mutate('Full Sequence' = gsub("NH2-", "",
                          gsub("-COOH", "",
                               gsub("<cmm>","",
@@ -64,7 +64,7 @@ sapply(abrfprots, function(x){
 ## FlashLFQ With normalization
 ### Without match-between-runs (no MBR with normalization)
 ```{r}
-flash <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/noMBRwith\ normalization/Galaxy109-[FlashLFQ_on_data_99,_data_73,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
+flash <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/noMBRwith\ normalization/Galaxy185-[FlashLFQ_on_data_99,_data_53,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
                 mutate(Sequence = gsub("<cmm>", "", str_match(Sequence, "NH2-(.+)-COOH")[,2]))
 
 # Aggregate intensities for each protein and each sample
@@ -77,7 +77,7 @@ sapply(abrfprots, function(x){
 
 ### With match-between-runs (with MBR, with normalization)
 ```{r}
-flash_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/MBR\ with\ normalization/Galaxy103-[FlashLFQ_on_data_99,_data_73,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
+flash_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/FLASHLFQ/MBR\ with\ normalization/Galaxy191-[FlashLFQ_on_data_99,_data_53,_and_others__QuantifiedPeptides.tsv].tabular", stringsAsFactors = FALSE) %>%
   mutate('Full Sequence' = gsub("NH2-", "",
                          gsub("-COOH", "",
                               gsub("<cmm>","",
@@ -97,12 +97,11 @@ sapply(abrfprots, function(x){
 
 ```{r}
 # When moFF is run without MBR, we need to combine all of the individual peptide summaries, which we do with `join_all` from `plyr`. 
-moff_files <- list.files('2019_datasets/ABRF/moFF_SGPS_Galaxy/moFFnoMBR/peptide_summary-080619/',
+moff_files <- list.files('Quant\ Paper\ Redone_11102019/ABRF/moFF/noMBR\ without\ normalization/peptide_summary/',
                     full.names = TRUE)
-
 moff_no_mbr <- lapply(moff_files, function(i) read.delim(i, as.is = TRUE) %>%
                 rename(!!paste("Intensity_",
-                     str_extract(i, "ABRF_2016_40Y_1_Sample[0-9_]"), sep="") := sumIntensity_ABRF_PSM_02082019)) %>%
+                     str_extract(i, "ABRF_2016_40Y_1_Sample[0-9_]"), sep="") := sumIntensity_ABRF_PSM)) %>%
                 join_all(by=c("peptide", "prot"), type = "full") %>%
                 rename(Sequence = peptide)
 
@@ -111,12 +110,12 @@ sapply(abrfprots, function(x){
     moff_no_mbr %>% filter(grepl(x, prot)) %>%
     group_by(prot) %>%
     summarise_if(is.numeric, sum)
-  })
+})
 ```
 
 ### With match-between-runs (with MBR)
 ```{r}
-moff_mbr <- read.delim("2019_datasets/ABRF/moFF_SGPS_Galaxy/moFFMBR/Galaxy9-[moFF_on_data_4,_data_3,_and_others__peptide_summary]-080619.tabular", stringsAsFactors = FALSE)
+moff_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/moFF/MBR\ without\ normalization/Galaxy119-[moFF_on_data_115,_data_114,_and_others__peptide_summary].tabular", stringsAsFactors = FALSE)
 moff_mbr
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
@@ -129,7 +128,7 @@ sapply(abrfprots, function(x){
 ## MaxQuant
 ### Without match-between-runs (no MBR) 
 ```{r}
-maxquant <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/no_MBR/peptides.txt", stringsAsFactors = FALSE)
+maxquant <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/MaxQuant/ABRF_MQ_noMBR/combined/txt/peptides.txt", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
@@ -145,7 +144,7 @@ sapply(abrfprots, function(x){
 
 ### With match-between-runs (with MBR)
 ```{r}
-maxquant_mbr <- read.delim("2019_datasets/ABRF/MaxQuant_GUI/with_MBR/peptides.txt", stringsAsFactors = FALSE)
+maxquant_mbr <- read.delim("Quant\ Paper\ Redone_11102019/ABRF/MaxQuant/ABRF_MQ_withMBR/combined/txt/peptides.txt", stringsAsFactors = FALSE)
 
 # Aggregate intensities for each protein and each sample
 sapply(abrfprots, function(x){ 
