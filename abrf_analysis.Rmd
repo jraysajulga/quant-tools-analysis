@@ -134,7 +134,7 @@ moff_mbr_table <- t(sapply(abrfprots, function(x){
     summarise_if(is.numeric, sum)
   }))
 
-moff_mbr_table[,c(3,4,2,5)]
+moff_mbr_table[,c(3,5,2,4)]
 ```
 
 ## MaxQuant
