@@ -166,7 +166,7 @@ flash_no_mbr$peptide <- gsub("<cmm>","",
 
 ### moFF
 ```{r moff}
-moff <- read.delim("Quant\ Paper\ Redone_11102019/UPS/moff/MBR\ without\ normalization/Galaxy137-[moFF_on_data_133,_data_132,_and_others__peptide_summary].tabular",
+moff <- read.delim("Quant_Paper_dec_results/UPS/moff/MBR\ without\ normalization/Galaxy137-[moFF_on_data_133,_data_132,_and_others__peptide_summary].tabular",
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- take_first_protein(moff$prot)
@@ -178,7 +178,7 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files('Quant\ Paper\ Redone_11102019/UPS/moff/noMBR\ without\ normalization/peptide\ summary/',
+moff_files <- list.files('Quant_Paper_dec_results/UPS/moff/noMBR\ without\ normalization/peptide\ summary/',
                     full.names = TRUE)
 #tail(unlist(str_split(moff_files[1], "/")), n=1)
 
