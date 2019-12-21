@@ -104,10 +104,18 @@ We analyze 6 different result files on the peptide level, and 2 different result
 
 The 2 protein files are MaxQuant's protein report (`proteinGroups.txt`), from MaxQuant run with/without MBR. 
 
-In the following, we read in all of the results files. In most cases, the protein IDs are in a list, separated by ";", so we use the function `take_first_protein()` to get the first protein in the list. 
+In the following, we read in all of the results files. In most cases, the protein IDs are in a list, separated by ";", so we use the function `get_protein()` to get the first protein in the list. 
 ```{r}
-take_first_protein <- function(prot_vec){
-    str_split(str_split(prot_vec, ",", simplify = TRUE)[, 1], ";", simplify = TRUE)[, 1]
+get_protein <- function(prot_vec){
+    sapply(str_split(prot_vec, ",", simplify = TRUE)[, 1], function ( row ) {
+      proteins <- str_split(row, ";", simplify = TRUE)
+      results <- proteins[grepl("ups", proteins)]
+      if (length(results) == 0){
+        proteins[1]
+      } else {
+        results[1]
+      }
+    })
 }
 ```
 
@@ -123,7 +131,7 @@ flash <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ without\ normaliz
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
-flash$prot <- take_first_protein(flash$prot)
+flash$prot <- get_protein(flash$prot)
 flash_names <- names(flash)
 flash$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
@@ -134,7 +142,7 @@ flash_no_mbr <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBR\ without\
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
-flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
+flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
 flash_no_mbr$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
                            gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))))
@@ -146,7 +154,7 @@ flash_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ with\ normal
                     stringsAsFactors = FALSE) %>%
     rename(prot = Protein.Groups) %>%
     select(Gene.Name, prot, starts_with("Intensity"))
-flash$prot <- take_first_protein(flash$prot)
+flash$prot <- get_protein(flash$prot)
 #flash_names <- names(flash)
 
 # flash no mbr
@@ -154,7 +162,7 @@ flash_no_mbr_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBRwith\
                            stringsAsFactors = FALSE) %>%
     rename(prot = Protein.Groups) %>%
     select(Gene.Name, prot, starts_with("Intensity"))
-flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
+flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
 ```
 
 
@@ -163,7 +171,7 @@ flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
 moff <- read.delim("Quant_Paper_dec_results/UPS/moff/MBR\ without\ normalization/Galaxy137-[moFF_on_data_133,_data_132,_and_others__peptide_summary].tabular",
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
-moff$prot <- take_first_protein(moff$prot)
+moff$prot <- get_protein(moff$prot)
 moff_names <- names(moff)
 moff <- moff[,c(1,2,9,7,8,4,3,5,10,6)]
 ```
@@ -180,7 +188,7 @@ moff_no_mbr <- lapply(moff_files, function(i) df = read.delim(i, as.is = TRUE) %
   rename(!!paste("sumIntensity_20130510_EXQ1_IgPa_QC_",
                  str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM_All)) %>%
                         join_all(by=c("peptide", "prot"), type = "full")
-moff_no_mbr$prot <- take_first_protein(moff_no_mbr$prot)
+moff_no_mbr$prot <- get_protein(moff_no_mbr$prot)
 ```
 
 ### MaxQuant
@@ -191,7 +199,7 @@ mq <- read.delim("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_MBR/combined/tx
                  stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
-mq$prot <- take_first_protein(mq$prot)
+mq$prot <- get_protein(mq$prot)
 mq_names <- names(mq)
 
 # mq no mbr
@@ -199,7 +207,7 @@ mq_no_mbr <- read.delim("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_noMBR/co
                         stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
-mq_no_mbr$prot <- take_first_protein(mq_no_mbr$prot)
+mq_no_mbr$prot <- get_protein(mq_no_mbr$prot)
 ```
 
 #### Proteins
@@ -213,7 +221,7 @@ mq_prot_analysis <- function(proteinGroups, name){
                       na.strings = c("0", "", "NA"),
                       stringsAsFactors = FALSE) %>%
         filter(is.na(Reverse)) %>% # if not decoy, is na
-        mutate(prot = take_first_protein(Protein.IDs),
+        mutate(prot = get_protein(Protein.IDs),
                ups_prot_id = str_split(prot, "ups\\|", simplify = TRUE)[, 1]) %>%
         mutate(ups = str_detect(prot, "ups"), de = ups & !(ups_prot_id %in% ups_non_de)) %>%
         select(prot, ups, de, starts_with("LFQ"), ups_prot_id)
