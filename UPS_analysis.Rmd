@@ -142,25 +142,19 @@ flash_no_mbr$peptide <- gsub("<cmm>","",
 
 ### FlashLFQ (with normalization)
 ```{r flash}
-flash_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ with\ normalization/Galaxy234-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ with\ normalization/Galaxy235-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedProteins.tsv].tabular",
                     stringsAsFactors = FALSE) %>%
-    rename(peptide = Sequence, prot = Protein.Groups) %>%
-    select(peptide, prot, starts_with("Intensity"))
+    rename(prot = Protein.Groups) %>%
+    select(Gene.Name, prot, starts_with("Intensity"))
 flash$prot <- take_first_protein(flash$prot)
-flash_names <- names(flash)
-flash$peptide <- gsub("<cmm>","",
-                      gsub("<ox>","",
-                           gsub("NH2-","", gsub("-COOH","", flash$peptide))))
+#flash_names <- names(flash)
 
 # flash no mbr
-flash_no_mbr_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBRwith\ normalization/Galaxy246-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_no_mbr_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBRwith\ normalization/Galaxy247-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedProteins.tsv].tabular",
                            stringsAsFactors = FALSE) %>%
-    rename(peptide = Sequence, prot = Protein.Groups) %>%
-    select(peptide, prot, starts_with("Intensity"))
+    rename(prot = Protein.Groups) %>%
+    select(Gene.Name, prot, starts_with("Intensity"))
 flash_no_mbr$prot <- take_first_protein(flash_no_mbr$prot)
-flash_no_mbr$peptide <- gsub("<cmm>","",
-                      gsub("<ox>","",
-                           gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))))
 ```
 
 
@@ -272,8 +266,7 @@ peptides_normalize_and_test_de <- function(df,
       intensities <- as.matrix(df[, int_col_vec])
     }
     
-    df_norm <- data.frame(peptide = df$peptide,
-                          prot = df$prot,
+    df_norm <- data.frame(prot = df$prot,
                           intensities,
                           stringsAsFactors = FALSE)
     df_peca <- PECA::PECA_df(df_norm, id = id_col_name,
