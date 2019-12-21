@@ -107,13 +107,21 @@ The 2 protein files are MaxQuant's protein report (`proteinGroups.txt`), from Ma
 In the following, we read in all of the results files. In most cases, the protein IDs are in a list, separated by ";", so we use the function `get_protein()` to get the first protein in the list. 
 ```{r}
 get_protein <- function(prot_vec){
-    sapply(str_split(prot_vec, ",", simplify = TRUE)[, 1], function ( row ) {
-      proteins <- str_split(row, ";", simplify = TRUE)
-      results <- proteins[grepl("ups", proteins)]
-      if (length(results) == 0){
-        proteins[1]
+    sapply(prot_vec, function ( row ) {
+      delimiter <- unlist(sapply(c(', ', ';'),
+                                 function(delimiter) {
+                                   if (length(grep(delimiter, row)) > 0){ delimiter }
+                                 }))[[1]]
+      if (length(delimiter) > 0){
+        proteins <- str_split(row, delimiter, simplify = TRUE)
+        results <- proteins[grepl("ups", proteins)]
+        if (length(results) == 0){
+          proteins[1]
+        } else {
+          results[1]
+        }
       } else {
-        results[1]
+        row
       }
     })
 }
