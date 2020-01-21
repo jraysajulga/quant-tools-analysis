@@ -73,12 +73,12 @@ get_protein <- function(prot_vec){
         proteins <- str_split(row, delimiter, simplify = TRUE)
         results <- proteins[grepl("ups", proteins)]
         if (length(results) == 0){
-          proteins[1]
+          return(proteins[1])
         } else {
-          results[1]
+          return(results[1])
         }
       } else {
-        row
+        return(row)
       }
     })
 }
@@ -89,10 +89,19 @@ We don't want any character columns to be read as factors:
 options(stringsAsFactors = FALSE)
 ```
 
+Let's also set up a function for getting the filename using a regular expression:
+```{r}
+root <- "Quant_Paper_dec_results"
+get_filename <- function(directory, regex){
+  directory <- paste0(root, directory)
+  paste0(directory, list.files(directory, pattern=regex))
+}
+```
+
 ### FlashLFQ (no normalization)
 
 ```{r flash}
-flash <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ without\ normalization/Galaxy240-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedPeptides.tsv].tabular",
+flash <- read.delim(get_filename("/UPS/FLASHLFQ/MBR\ without\ normalization/", ".+QuantifiedPeptides.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -103,7 +112,7 @@ flash$peptide <- gsub("<cmm>","",
                            gsub("NH2-","", gsub("-COOH","", flash$peptide))))
 
 # flash no mbr
-flash_no_mbr <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBR\ without\ normalization/Galaxy252-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedPeptides.tsv].tabular",
+flash_no_mbr <- read.delim(get_filename("/UPS/FLASHLFQ/noMBR\ without\ normalization/", ".+QuantifiedPeptides.tsv].tabular"),
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -115,7 +124,8 @@ flash_no_mbr$peptide <- gsub("<cmm>","",
 
 ### FlashLFQ (with normalization)
 ```{r flash}
-flash_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/MBR\ with\ normalization/Galaxy235-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedProteins.tsv].tabular",
+flash_norm <- read.delim(get_filename("/UPS/FLASHLFQ/MBR\ with\ normalization/",
+                                      ".+QuantifiedProteins.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
     rename(prot = Protein.Groups) %>%
     select(Gene.Name, prot, starts_with("Intensity"))
@@ -123,7 +133,8 @@ flash$prot <- get_protein(flash$prot)
 #flash_names <- names(flash)
 
 # flash no mbr
-flash_no_mbr_norm <- read.delim("Quant_Paper_dec_results/UPS/FLASHLFQ/noMBRwith\ normalization/Galaxy247-[FlashLFQ_on_data_20,_data_133,_and_others__QuantifiedProteins.tsv].tabular",
+flash_no_mbr_norm <- read.delim(get_filename("/UPS/FLASHLFQ/noMBRwith\ normalization/",
+                                             ".+QuantifiedProteins.tsv].tabular"),
                            stringsAsFactors = FALSE) %>%
     rename(prot = Protein.Groups) %>%
     select(Gene.Name, prot, starts_with("Intensity"))
@@ -133,7 +144,7 @@ flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
 
 ### moFF
 ```{r moff}
-moff <- read.delim("Quant_Paper_dec_results/UPS/moff/MBR\ without\ normalization/Galaxy137-[moFF_on_data_133,_data_132,_and_others__peptide_summary].tabular",
+moff <- read.delim(get_filename("/UPS/moff/MBR\ without\ normalization/", ".+peptide_summary].tabular"),
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- get_protein(moff$prot)
@@ -145,7 +156,7 @@ When moFF is run without MBR, we need to combine all of the individual peptide s
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files('Quant_Paper_dec_results/UPS/moff/noMBR\ without\ normalization/peptide\ summary/',
+moff_files <- list.files(paste0(root, '/UPS/moff/noMBR\ without\ normalization/peptide\ summary/'),
                     full.names = TRUE)
 #tail(unlist(str_split(moff_files[1], "/")), n=1)
 
@@ -317,7 +328,7 @@ all_df <- cbind(method_list, rmsle = rmses)
 fc_accuracy <- rbind(all_df, mq_data$rmlse, mq_no_mbr_data$rmlse) %>%
     rename("Normalization" = Var1,
            "Tool" = Var2) 
-write.table(fc_accuracy, file = "2019_results/fold_change_accuracy.tabular",
+write.table(fc_accuracy, file = "results/fold_change_accuracy.tabular",
             quote = FALSE,
             row.names = FALSE,
             sep = '\t')
@@ -405,7 +416,7 @@ stat_table <- rbind(stat_df, mq_stat, mq_no_mbr_stat) %>%
            tested = as.numeric(nprot_de)/40) %>%
     rename(TotalProtIDs = nprot,
            UpsDeProtDetected = nprot_de)
-write.table(stat_table, file="2019_results/differential_expression_results.tab",
+write.table(stat_table, file="results/differential_expression_results.tab",
             sep = "\t", quote = FALSE, row.names = FALSE)
 ```
 
@@ -552,7 +563,7 @@ mq_no_mbr <- c("Normalization" = "MaxLFQ",
 all_himedlo <- rbind(himedlo, mq_mbr, mq_no_mbr) %>%
     rename("Normalization" = Var1, "Tool" = Var2)
 all_himedlo
-write.table(all_himedlo, file="2019_results/high_low_fold_change_accuracy_new.tab",
+write.table(all_himedlo, file="results/high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
 
