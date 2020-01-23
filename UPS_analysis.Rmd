@@ -38,7 +38,7 @@ ups_protein_ids <- c(
     "P08758","P02741","P05413","P10145","P02788","P10636","P00441","P01375"
 )
 
-ups_true_df <- data.frame(protid = ups_protein_ids,
+ups_true_df <- data.frame(prot = ups_protein_ids,
                           ratios = rep(
                             sapply(1:-4, function(factor){
                               return(10^factor)
@@ -63,25 +63,7 @@ The 2 protein files are MaxQuant's protein report (`proteinGroups.txt`), from Ma
 
 In the following, we read in all of the results files. In most cases, the protein IDs are in a list, separated by ";", so we use the function `get_protein()` to get the first protein in the list. 
 ```{r}
-get_protein <- function(prot_vec){
-    sapply(prot_vec, function ( row ) {
-      delimiter <- unlist(sapply(c(', ', ';'),
-                                 function(delimiter) {
-                                   if (length(grep(delimiter, row)) > 0){ delimiter }
-                                 }))[[1]]
-      if (length(delimiter) > 0){
-        proteins <- str_split(row, delimiter, simplify = TRUE)
-        results <- proteins[grepl("ups", proteins)]
-        if (length(results) == 0){
-          return(proteins[1])
-        } else {
-          return(results[1])
-        }
-      } else {
-        return(row)
-      }
-    })
-}
+get_protein <- function(prot_vec){ sapply(prot_vec, function ( row ) { return(str_extract(row, "[A-Z0-9]{6}")) }) }
 ```
 
 We don't want any character columns to be read as factors:
@@ -91,17 +73,18 @@ options(stringsAsFactors = FALSE)
 
 Let's also set up a function for getting the filename using a regular expression:
 ```{r}
-root <- "Quant_Paper_dec_results"
-get_filename <- function(directory, regex){
-  directory <- paste0(root, directory)
-  paste0(directory, list.files(directory, pattern=regex))
+root <- "Jan_Quant_Paper_revised"
+get_filename <- function(root, directory, regex){
+  directory <- paste0("data/", root, directory)
+  filename <- paste0(directory, list.files(directory, pattern=regex))
+  print(filename)
+  return(filename)
 }
 ```
 
 ### FlashLFQ (no normalization)
-
 ```{r flash}
-flash <- read.delim(get_filename("/UPS/FLASHLFQ/MBR\ without\ normalization/", ".+QuantifiedPeptides.tsv].tabular"),
+flash <- read.delim(get_filename(root, "/UPS/FLASHLFQ/MBR_without_norm/", ".+QuantifiedPeptides.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -110,9 +93,9 @@ flash_names <- names(flash)
 flash$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
                            gsub("NH2-","", gsub("-COOH","", flash$peptide))))
-
+flash
 # flash no mbr
-flash_no_mbr <- read.delim(get_filename("/UPS/FLASHLFQ/noMBR\ without\ normalization/", ".+QuantifiedPeptides.tsv].tabular"),
+flash_no_mbr <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_without_norm/", ".+QuantifiedPeptides.tsv].tabular"),
                            stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Protein.Groups) %>%
     select(peptide, prot, starts_with("Intensity"))
@@ -120,70 +103,76 @@ flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
 flash_no_mbr$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
                            gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))))
+flash_no_mbr
 ```
 
 ### FlashLFQ (with normalization)
 ```{r flash}
-flash_norm <- read.delim(get_filename("/UPS/FLASHLFQ/MBR\ with\ normalization/",
-                                      ".+QuantifiedProteins.tsv].tabular"),
+flash_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/MBR_with_norm/",
+                                      ".+BayesianFoldChangeAnalysis.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
-    rename(prot = Protein.Groups) %>%
-    select(Gene.Name, prot, starts_with("Intensity"))
-flash$prot <- get_protein(flash$prot)
+    rename(prot = Protein.Group) %>%
+    select(prot, Protein.Intensity.for.Treatment.Condition)
+flash_norm$prot <- get_protein(flash_norm$prot)
 #flash_names <- names(flash)
+flash_norm
 
 # flash no mbr
-flash_no_mbr_norm <- read.delim(get_filename("/UPS/FLASHLFQ/noMBRwith\ normalization/",
-                                             ".+QuantifiedProteins.tsv].tabular"),
-                           stringsAsFactors = FALSE) %>%
-    rename(prot = Protein.Groups) %>%
-    select(Gene.Name, prot, starts_with("Intensity"))
-flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
+flash_no_mbr_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_with_norm/",
+                                             ".+BayesianFoldChangeAnalysis.tsv].tabular"),
+                            stringsAsFactors = FALSE) %>%
+    rename(prot = Protein.Group) %>%
+    select(prot, Protein.Intensity.for.Treatment.Condition)
+flash_no_mbr_norm$prot <- get_protein(flash_no_mbr_norm$prot)
+flash_no_mbr_norm
 ```
 
 
 ### moFF
 ```{r moff}
-moff <- read.delim(get_filename("/UPS/moff/MBR\ without\ normalization/", ".+peptide_summary].tabular"),
+moff <- read.delim(get_filename(root, "/UPS/moff/withMBR/", ".+peptide_summary].tabular"),
                    stringsAsFactors = FALSE)
 # replace protein list with first protein
 moff$prot <- get_protein(moff$prot)
 moff_names <- names(moff)
-moff <- moff[,c(1,2,9,7,8,4,3,5,10,6)]
+moff <- moff[,order(colnames(moff))]
+moff
 ```
 
 When moFF is run without MBR, we need to combine all of the individual peptide summaries, which we do with `join_all` from `plyr`. 
 
 ```{r moff_no_mbr}
 # moff, no mbr
-moff_files <- list.files(paste0(root, '/UPS/moff/noMBR\ without\ normalization/peptide\ summary/'),
+moff_files <- list.files(paste0('data/',root, '/UPS/moff/withoutMBR/peptide_summary/'),
                     full.names = TRUE)
 #tail(unlist(str_split(moff_files[1], "/")), n=1)
 
 moff_no_mbr <- lapply(moff_files, function(i) df = read.delim(i, as.is = TRUE) %>% 
   rename(!!paste("sumIntensity_20130510_EXQ1_IgPa_QC_",
-                 str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM_All)) %>%
+                 str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM_All_edited)) %>%
                         join_all(by=c("peptide", "prot"), type = "full")
 moff_no_mbr$prot <- get_protein(moff_no_mbr$prot)
+moff_no_mbr
 ```
 
 ### MaxQuant
 
 #### Peptides
 ```{r mqpep}
-mq <- read.delim("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_MBR/combined/txt/peptides.txt",
+mq <- read.delim(paste0('data/', root, "/UPS/MAXQUANT/MQ_MBR/txt/peptides.txt"),
                  stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
 mq$prot <- get_protein(mq$prot)
 mq_names <- names(mq)
-
+mq
 # mq no mbr
-mq_no_mbr <- read.delim("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_noMBR/combined/txt/peptides.txt",
+mq_no_mbr <- read.delim(paste0('data/', root, "/UPS/MAXQUANT/MQ_NoMBR/txt/peptides.txt"),
                         stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
 mq_no_mbr$prot <- get_protein(mq_no_mbr$prot)
+mq_no_mbr
 ```
 
 #### Proteins
@@ -224,10 +213,10 @@ mq_prot_analysis <- function(proteinGroups, name){
 }
 
 # mq prot
-mq_data <- mq_prot_analysis("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_MBR/combined/txt/proteinGroups.txt", "MaxQuant")
+mq_data <- mq_prot_analysis(paste0('data/', root, "/UPS/MAXQUANT/MQ_MBR/txt/proteinGroups.txt"), "MaxQuant")
 
 # mq prot, no mbr
-mq_no_mbr_data <- mq_prot_analysis("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/UPS_noMBR/combined/txt/proteinGroups.txt", "MaxQuant_no_MBR")
+mq_no_mbr_data <- mq_prot_analysis(paste0('data/', root, "/UPS/MAXQUANT/MQ_NoMBR/txt/proteinGroups.txt"), "MaxQuant_no_MBR")
 ```
 
 ## Differential expression analysis and ratio estimation
@@ -235,48 +224,35 @@ mq_no_mbr_data <- mq_prot_analysis("Quant\ Paper\ Redone_11102019/UPS/MAXQUANT/U
 Below is the function that is used on all of the peptide reports to normalize and then test for differential expression. The R/Bioconductor package `limma` is used for normalization, and the package `PECA` is used to "roll-up" from peptides to proteins and to test for differential expression (using a modified t-test). Then, `roc` from the `pROC` package is used to create a ROC curve, from which the AUC is estimated. 
 
 ```{r testfun}
-peptides_normalize_and_test_de <- function(df,
-                              int_col_vec,
-                              id_col_name,
-                              norm_method,
-                              grp1_col_name,
-                              grp2_col_name){
+peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name, norm_method, grp1_col_name, grp2_col_name){
+  
     if (norm_method == "vsn"){
       intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
     } else if (norm_method != 'NA') {
-      intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])),
-                                                      method = norm_method))
+      intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])), method = norm_method))
     } else {
       intensities <- as.matrix(df[, int_col_vec])
     }
     
-    df_norm <- data.frame(prot = df$prot,
-                          intensities,
-                          stringsAsFactors = FALSE)
-    df_peca <- PECA::PECA_df(df_norm, id = id_col_name,
-                       samplenames1 = grp1_col_name,
-                       samplenames2 = grp2_col_name,
+    df_norm <- data.frame(prot = df$prot, intensities, stringsAsFactors = FALSE)
+    df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
                        test = "modt")
     df_peca$prot <- rownames(df_peca)
-    # ups proteins
-    df_peca$ups <- str_detect(df_peca$prot, "ups") * 1
     
-    # truly de proteins
-    df_peca$de <- df_peca$ups
+    # ups proteins
+    df_peca$ups <- as.numeric(df_peca$prot %in% ups_protein_ids)
+    print(df_peca)
     # ups proteins that are not DE
     for (i in 1:nrow(df_peca)){
-        df_peca$de[i] <- ifelse(any(str_detect(rep(df_peca$prot[i], 8), ups_non_de)),
-                                0, df_peca$ups[i])
+        df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de,
+                                0, 1)
     }
-
+    
     df_peca_ratio <- df_peca %>%
         filter(ups == 1) %>%
-        mutate(protid = str_replace(prot, "^([OPQ].*)ups(\\|.*)?", "\\1")) %>%
-        mutate(protid = str_split(protid, "-", simplify = TRUE)[, 1]) %>%
-        select(-prot) %>%
-        left_join(ups_true_df, by = "protid") %>%
+        left_join(ups_true_df, by = "prot") %>%
         mutate(sr = 2^slr) # peca returns log2 fold change
-    
+    print(df_peca)
     sqr_err <- (log10(df_peca_ratio$sr) - log10(df_peca_ratio$ratios))^2
     rmsle <- sqrt(mean(sqr_err, na.rm = TRUE))
     sd <- sd(sqr_err, na.rm = TRUE)
@@ -295,9 +271,9 @@ quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
                    "FlashLFQ_no_MBR", "MaxQuant", "MaxQuant_no_MBR")
 quants <- list("moFF" = moff,  "moFF_no_MBR" = moff_no_mbr,
                "FlashLFQ" = flash, "FlashLFQ_no_MBR" = flash_no_mbr,
-               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr,
+               "MaxQuant" = mq, "M`caxQuant_no_MBR" = mq_no_mbr,
                "FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
-method_list <- expand.grid(norm_methods, quant_methods, stringsAsFactors = FALSE)
+method_list <- expand.grid(list(norm_methods = norm_methods, quant_methods = quant_methods), stringsAsFactors = FALSE)
 method_list <- rbind(method_list,
                      c('NA', 'FlashLFQ_norm'),
                      c('NA', 'FlashLFQ_no_MBR_norm'))
@@ -306,12 +282,12 @@ results <- vector(length = nrow(method_list), mode = "list")
 rmses <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
   if (i != 14){
-    df <- quants[[method_list$Var2[i]]]
+    df <- quants[[method_list$quant_methods[i]]]
     names_df <- names(df)
     ith_result <- peptides_normalize_and_test_de(df,
                                     int_col_vec = 3:10,
                                     id_col_name = 'prot',
-                                    norm_method =  method_list$Var1[i],
+                                    norm_method =  method_list$norm_methods[i],
                                     grp1_col_name = names_df[7:10],
                                     grp2_col_name = names_df[3:6])
     results[[i]] <- ith_result
@@ -321,6 +297,9 @@ for (i in 1:nrow(method_list)){
 }
 
 all_df <- cbind(method_list, rmsle = rmses)
+```
+```{r}
+method_list
 ```
 
 #### Add Protein level
