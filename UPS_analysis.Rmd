@@ -206,7 +206,7 @@ mq_prot_analysis <- function(proteinGroups, name){
         rowMeans(mq_prot_filt[, 4:7], na.rm = TRUE)
     # mq_roc <- roc(mq_prot_filt$de, mq_prot_filt$p.fdr)
     joined_mq <- filter(mq_prot_filt, ups) %>%
-        left_join(ups_true_df, by = c("ups_prot_id" = "protid")) 
+        left_join(ups_true_df, by = c("ups_prot_id" = "prot")) 
     rmsle <- sqrt(mean((log10(joined_mq$sr) - log10(joined_mq$ratios))^2, na.rm = TRUE))
     mq_data <- data.frame("Var1" = "MaxLFQ", "Var2" = name, rmsle = rmsle)
     list("full_df" = mq_prot_filt, "rmlse" = mq_data, "joined_mq" = joined_mq)
@@ -224,8 +224,8 @@ mq_no_mbr_data <- mq_prot_analysis(paste0('data/', root, "/UPS/MAXQUANT/MQ_NoMBR
 Below is the function that is used on all of the peptide reports to normalize and then test for differential expression. The R/Bioconductor package `limma` is used for normalization, and the package `PECA` is used to "roll-up" from peptides to proteins and to test for differential expression (using a modified t-test). Then, `roc` from the `pROC` package is used to create a ROC curve, from which the AUC is estimated. 
 
 ```{r testfun}
-peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name, norm_method, grp1_col_name, grp2_col_name){
-  
+peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name,
+                                           norm_method, grp1_col_name, grp2_col_name){
     if (norm_method == "vsn"){
       intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
     } else if (norm_method != 'NA') {
@@ -238,26 +238,24 @@ peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name, norm_me
     df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
                        test = "modt")
     df_peca$prot <- rownames(df_peca)
-    
     # ups proteins
     df_peca$ups <- as.numeric(df_peca$prot %in% ups_protein_ids)
-    print(df_peca)
     # ups proteins that are not DE
     for (i in 1:nrow(df_peca)){
         df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de,
-                                0, 1)
+                                0, df_peca$ups[i])
     }
     
     df_peca_ratio <- df_peca %>%
         filter(ups == 1) %>%
         left_join(ups_true_df, by = "prot") %>%
         mutate(sr = 2^slr) # peca returns log2 fold change
-    print(df_peca)
     sqr_err <- (log10(df_peca_ratio$sr) - log10(df_peca_ratio$ratios))^2
     rmsle <- sqrt(mean(sqr_err, na.rm = TRUE))
     sd <- sd(sqr_err, na.rm = TRUE)
     df_roc <- pROC::roc(df_peca$de, df_peca$p)
     
+    print(df_peca_ratio)
     return(list("peca" = df_peca_ratio,
                 "full_peca" = df_peca,
                 "roc" = df_roc,
@@ -271,38 +269,37 @@ quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
                    "FlashLFQ_no_MBR", "MaxQuant", "MaxQuant_no_MBR")
 quants <- list("moFF" = moff,  "moFF_no_MBR" = moff_no_mbr,
                "FlashLFQ" = flash, "FlashLFQ_no_MBR" = flash_no_mbr,
-               "MaxQuant" = mq, "M`caxQuant_no_MBR" = mq_no_mbr,
-               "FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
+               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr) #,
+               #"FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
 method_list <- expand.grid(list(norm_methods = norm_methods, quant_methods = quant_methods), stringsAsFactors = FALSE)
-method_list <- rbind(method_list,
-                     c('NA', 'FlashLFQ_norm'),
-                     c('NA', 'FlashLFQ_no_MBR_norm'))
+#method_list <- rbind(method_list,
+#                     c('NA', 'FlashLFQ_norm'),
+#                     c('NA', 'FlashLFQ_no_MBR_norm'))
 results <- vector(length = nrow(method_list), mode = "list")
 # aucs <- rep(0, nrow(method_list))
 rmses <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
-  if (i != 14){
+  # if (i != 14){
     df <- quants[[method_list$quant_methods[i]]]
     names_df <- names(df)
-    ith_result <- peptides_normalize_and_test_de(df,
-                                    int_col_vec = 3:10,
-                                    id_col_name = 'prot',
-                                    norm_method =  method_list$norm_methods[i],
-                                    grp1_col_name = names_df[7:10],
-                                    grp2_col_name = names_df[3:6])
+    if (method_list$quant_methods[i] == "FlashLFQ_no_MBR"){
+      
+    } else {
+      ith_result <- peptides_normalize_and_test_de(df,
+                                      int_col_vec = 3:10,
+                                      id_col_name = 'prot',
+                                      norm_method =  method_list$norm_methods[i],
+                                      grp1_col_name = names_df[7:10],
+                                      grp2_col_name = names_df[3:6])
+    }
     results[[i]] <- ith_result
     # aucs[i] <- ith_result$roc$auc
     rmses[i] <- ith_result$rmsle
-  }
+  # }
 }
-
 all_df <- cbind(method_list, rmsle = rmses)
 ```
-```{r}
-method_list
-```
 
-#### Add Protein level
 ```{r proteins}
 fc_accuracy <- rbind(all_df, mq_data$rmlse, mq_no_mbr_data$rmlse) %>%
     rename("Normalization" = Var1,
@@ -318,90 +315,6 @@ write.table(fc_accuracy, file = "results/fold_change_accuracy.tabular",
 
 ## RMSLE
 Plot the results:
-
-```{r plots, fig.width=14}
-library(ggplot2)
-ggplot(fc_accuracy) + 
-    geom_bar(aes(x = Tool,
-                 y = rmsle, fill = Normalization), position = "dodge",
-             stat = "identity", color = "black") +
-    theme_bw() +
-    labs(x="Quantification", y="Root Mean Squared Error (Log10 scale)")
-ggsave("UPS/mse.png")
-```
-
-## Table of TP, TN, FP, FN at 5% FDR 
-
-```{r}
-stat_df <- method_list %>%
-    rename(Normalization = Var1,
-           Tool = Var2)
-nrows <- nrow(stat_df)
-fdr_cut <- 0.05
-tp <- fp <- tn <- fn <- nprot <- nprot_de <- rep(0, nrows)
-for (i in 1:nrows){
-    resloc <- results[[i]]$full_peca[results[[i]]$full_peca$n > 0, ]
-    nprot[i] <- sum(resloc$n != 0)
-    nprot_de[i] <- sum(resloc$n != 0 & resloc$de == 1)
-    tp[i] <- sum(resloc$p.fdr <= fdr_cut & resloc$de == 1) # tp
-    fp[i] <- sum(resloc$p.fdr <= fdr_cut & resloc$de == 0) # not de, declared de
-    tn[i] <- sum(resloc$p.fdr > fdr_cut & resloc$de == 0)
-    fn[i] <- sum(resloc$p.fdr > fdr_cut & resloc$de == 1)
-}
-
-# maxquant
-mq_full_df <- mq_data$full_df
-mq_nprot <- nrow(mq_full_df)
-mq_de <- with(mq_full_df, sum(de == 1))
-mq_tp <- with(mq_full_df, sum(p.fdr <= fdr_cut & de == 1)) 
-mq_fp <- with(mq_full_df, sum(p.fdr <= fdr_cut & de == 0)) 
-mq_tn <- with(mq_full_df, sum(p.fdr > fdr_cut & de == 0))
-mq_fn <- with(mq_full_df, sum(p.fdr > fdr_cut &  de == 1))
-mq_stat <- c("Normalization" = "MaxLFQ",
-             "Tool" = "MaxQuant",
-             nprot = mq_nprot,
-             nprot_de = mq_de,
-             tp = mq_tp,
-             fn = mq_fn,
-             fp = mq_fp,
-             tn = mq_tn)
-
-mq_no_mbr_full_df <- mq_no_mbr_data$full_df
-mq_no_mbr_nprot <- nrow(mq_no_mbr_full_df)
-mq_no_mbr_de <- with(mq_no_mbr_full_df, sum(de == 1))
-mq_no_mbr_tp <- with(mq_no_mbr_full_df, sum(p.fdr <= fdr_cut & de == 1)) 
-mq_no_mbr_fp <- with(mq_no_mbr_full_df, sum(p.fdr <= fdr_cut & de == 0)) 
-mq_no_mbr_tn <- with(mq_no_mbr_full_df, sum(p.fdr > fdr_cut & de == 0))
-mq_no_mbr_fn <- with(mq_no_mbr_full_df, sum(p.fdr > fdr_cut &  de == 1))
-mq_no_mbr_stat <- c("Normalization" = "MaxLFQ",
-                 "Tool" = "MaxQuant_no_Mbr",
-              nprot = mq_no_mbr_nprot,
-             nprot_de = mq_no_mbr_de,
-             tp = mq_no_mbr_tp,
-             fn = mq_no_mbr_fn,
-             fp = mq_no_mbr_fp,
-             tn = mq_no_mbr_tn)
-
-stat_df$nprot <- nprot
-stat_df$nprot_de <- nprot_de
-stat_df$tp <- tp
-stat_df$fn <- fn
-stat_df$fp <- fp
-stat_df$tn <- tn
-
-stat_table <- rbind(stat_df, mq_stat, mq_no_mbr_stat) %>%
-    mutate(TPR = as.numeric(tp)/40,
-           FNR = as.numeric(fn)/40,
-           tested = as.numeric(nprot_de)/40) %>%
-    rename(TotalProtIDs = nprot,
-           UpsDeProtDetected = nprot_de)
-write.table(stat_table, file="results/differential_expression_results.tab",
-            sep = "\t", quote = FALSE, row.names = FALSE)
-```
-
-```{r echo=FALSE,results='asis'}
-kable(stat_table)
-```
 
 # High-Low Protein Abundance
 
@@ -539,8 +452,7 @@ mq_no_mbr <- c("Normalization" = "MaxLFQ",
              "0.0001" = mq_no_mbr_low1_rmsle,
              "0.0001n" = mq_no_mbr_n_low1)
 
-all_himedlo <- rbind(himedlo, mq_mbr, mq_no_mbr) %>%
-    rename("Normalization" = Var1, "Tool" = Var2)
+all_himedlo <- rbind(himedlo, mq_mbr, mq_no_mbr)
 all_himedlo
 write.table(all_himedlo, file="results/high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
