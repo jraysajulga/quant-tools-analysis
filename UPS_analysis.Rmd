@@ -47,9 +47,8 @@ ups_true_df <- data.frame(prot = ups_protein_ids,
                           stringsAsFactors = FALSE)
 
 # find the protein ids for proteins that are constant
-ups_non_de <- filter(ups_true_df, ratios == 1)$protid
+ups_non_de <- filter(ups_true_df, ratios == 1)$prot
 ```
-
 
 ## Quantification Results
 
@@ -188,7 +187,7 @@ mq_prot_analysis <- function(proteinGroups, name){
         filter(is.na(Reverse)) %>% # if not decoy, is na
         mutate(prot = get_protein(Protein.IDs),
                ups_prot_id = str_split(prot, "ups\\|", simplify = TRUE)[, 1]) %>%
-        mutate(ups = str_detect(prot, "ups"), de = ups & !(ups_prot_id %in% ups_non_de)) %>%
+        mutate(ups = prot %in% ups_protein_ids, de = ups & !(prot %in% ups_non_de)) %>%
         select(prot, ups, de, starts_with("LFQ"), ups_prot_id)
     
     # filter to 3 or more observations
@@ -224,8 +223,16 @@ mq_no_mbr_data <- mq_prot_analysis(paste0('data/', root, "/UPS/MAXQUANT/MQ_NoMBR
 Below is the function that is used on all of the peptide reports to normalize and then test for differential expression. The R/Bioconductor package `limma` is used for normalization, and the package `PECA` is used to "roll-up" from peptides to proteins and to test for differential expression (using a modified t-test). Then, `roc` from the `pROC` package is used to create a ROC curve, from which the AUC is estimated. 
 
 ```{r testfun}
-peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name,
+peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col_name,
                                            norm_method, grp1_col_name, grp2_col_name){
+  
+    
+    print(quant_method)
+    if (str_detect(quant_method, "norm")){
+      print("SUCCESS")
+      print(quant_method)
+    }
+  
     if (norm_method == "vsn"){
       intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
     } else if (norm_method != 'NA') {
@@ -255,12 +262,11 @@ peptides_normalize_and_test_de <- function(df, int_col_vec, id_col_name,
     sd <- sd(sqr_err, na.rm = TRUE)
     df_roc <- pROC::roc(df_peca$de, df_peca$p)
     
-    print(df_peca_ratio)
     return(list("peca" = df_peca_ratio,
                 "full_peca" = df_peca,
-                "roc" = df_roc,
-                "rmsle" = rmsle,
-                "sd" = sd))
+                #"roc" = df_roc,
+                "rmsle" = rmsle))#,
+                #"sd" = sd))
 }
 ```
 ```{r peptides, warning=FALSE,message=FALSE}
@@ -269,33 +275,30 @@ quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
                    "FlashLFQ_no_MBR", "MaxQuant", "MaxQuant_no_MBR")
 quants <- list("moFF" = moff,  "moFF_no_MBR" = moff_no_mbr,
                "FlashLFQ" = flash, "FlashLFQ_no_MBR" = flash_no_mbr,
-               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr) #,
+               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr)#,
                #"FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
 method_list <- expand.grid(list(norm_methods = norm_methods, quant_methods = quant_methods), stringsAsFactors = FALSE)
-#method_list <- rbind(method_list,
-#                     c('NA', 'FlashLFQ_norm'),
-#                     c('NA', 'FlashLFQ_no_MBR_norm'))
+method_list <- rbind(method_list)#,
+                     #c('NA', 'FlashLFQ_norm'),
+                     #c('NA', 'FlashLFQ_no_MBR_norm'))
 results <- vector(length = nrow(method_list), mode = "list")
 # aucs <- rep(0, nrow(method_list))
 rmses <- rep(0, nrow(method_list))
 for (i in 1:nrow(method_list)){
-  # if (i != 14){
+   if (i != 14){
     df <- quants[[method_list$quant_methods[i]]]
     names_df <- names(df)
-    if (method_list$quant_methods[i] == "FlashLFQ_no_MBR"){
-      
-    } else {
-      ith_result <- peptides_normalize_and_test_de(df,
-                                      int_col_vec = 3:10,
-                                      id_col_name = 'prot',
-                                      norm_method =  method_list$norm_methods[i],
-                                      grp1_col_name = names_df[7:10],
-                                      grp2_col_name = names_df[3:6])
-    }
-    results[[i]] <- ith_result
+    ith_result <- peptides_normalize_and_test_de(df,
+                                                 quant_method = method_list$quant_methods[i],
+                                                 int_col_vec = 3:10,
+                                                 id_col_name = 'prot',
+                                                 norm_method =  method_list$norm_methods[i],
+                                                 grp1_col_name = names_df[7:10],
+                                                 grp2_col_name = names_df[3:6])
+    #results[[i]] <- ith_result
     # aucs[i] <- ith_result$roc$auc
     rmses[i] <- ith_result$rmsle
-  # }
+   }
 }
 all_df <- cbind(method_list, rmsle = rmses)
 ```
