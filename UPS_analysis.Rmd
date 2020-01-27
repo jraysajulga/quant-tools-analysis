@@ -110,8 +110,8 @@ flash_no_mbr
 flash_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/MBR_with_norm/",
                                       ".+BayesianFoldChangeAnalysis.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
-    rename(prot = Protein.Group) %>%
-    select(prot, Protein.Intensity.for.Treatment.Condition)
+    rename(prot = Protein.Group)# %>%
+    #select(prot, Protein.Intensity.for.Treatment.Condition)
 flash_norm$prot <- get_protein(flash_norm$prot)
 #flash_names <- names(flash)
 flash_norm
@@ -120,8 +120,7 @@ flash_norm
 flash_no_mbr_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_with_norm/",
                                              ".+BayesianFoldChangeAnalysis.tsv].tabular"),
                             stringsAsFactors = FALSE) %>%
-    rename(prot = Protein.Group) %>%
-    select(prot, Protein.Intensity.for.Treatment.Condition)
+    rename(prot = Protein.Group)
 flash_no_mbr_norm$prot <- get_protein(flash_no_mbr_norm$prot)
 flash_no_mbr_norm
 ```
@@ -226,25 +225,24 @@ Below is the function that is used on all of the peptide reports to normalize an
 peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col_name,
                                            norm_method, grp1_col_name, grp2_col_name){
   
-    
-    print(quant_method)
     if (str_detect(quant_method, "norm")){
-      print("SUCCESS")
-      print(quant_method)
+      df_peca <- df %>% rename(p = False.Discovery.Rate,
+                               slr = Protein.Log2.Fold.Change)
+    } else {
+      if (norm_method == "vsn"){
+        intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
+      } else if (norm_method != 'NA') {
+        intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])), method = norm_method))
+      } else {
+        intensities <- as.matrix(df[, int_col_vec])
+      }
+      
+      df_norm <- data.frame(prot = df$prot, intensities, stringsAsFactors = FALSE)
+      df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
+                               test = "modt")
+      df_peca$prot <- rownames(df_peca)
     }
   
-    if (norm_method == "vsn"){
-      intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
-    } else if (norm_method != 'NA') {
-      intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])), method = norm_method))
-    } else {
-      intensities <- as.matrix(df[, int_col_vec])
-    }
-    
-    df_norm <- data.frame(prot = df$prot, intensities, stringsAsFactors = FALSE)
-    df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
-                       test = "modt")
-    df_peca$prot <- rownames(df_peca)
     # ups proteins
     df_peca$ups <- as.numeric(df_peca$prot %in% ups_protein_ids)
     # ups proteins that are not DE
@@ -252,6 +250,7 @@ peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col
         df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de,
                                 0, df_peca$ups[i])
     }
+    print(df_peca)
     
     df_peca_ratio <- df_peca %>%
         filter(ups == 1) %>%
@@ -259,9 +258,7 @@ peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col
         mutate(sr = 2^slr) # peca returns log2 fold change
     sqr_err <- (log10(df_peca_ratio$sr) - log10(df_peca_ratio$ratios))^2
     rmsle <- sqrt(mean(sqr_err, na.rm = TRUE))
-    sd <- sd(sqr_err, na.rm = TRUE)
-    df_roc <- pROC::roc(df_peca$de, df_peca$p)
-    
+    #print(df_peca_ratio)
     return(list("peca" = df_peca_ratio,
                 "full_peca" = df_peca,
                 #"roc" = df_roc,
@@ -275,12 +272,12 @@ quant_methods <- c("moFF",  "moFF_no_MBR", "FlashLFQ",
                    "FlashLFQ_no_MBR", "MaxQuant", "MaxQuant_no_MBR")
 quants <- list("moFF" = moff,  "moFF_no_MBR" = moff_no_mbr,
                "FlashLFQ" = flash, "FlashLFQ_no_MBR" = flash_no_mbr,
-               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr)#,
-               #"FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
+               "MaxQuant" = mq, "MaxQuant_no_MBR" = mq_no_mbr,
+               "FlashLFQ_norm" = flash_norm, "FlashLFQ_no_MBR_norm" = flash_no_mbr_norm)
 method_list <- expand.grid(list(norm_methods = norm_methods, quant_methods = quant_methods), stringsAsFactors = FALSE)
-method_list <- rbind(method_list)#,
-                     #c('NA', 'FlashLFQ_norm'),
-                     #c('NA', 'FlashLFQ_no_MBR_norm'))
+method_list <- rbind(method_list,
+                     c('NA', 'FlashLFQ_norm'),
+                     c('NA', 'FlashLFQ_no_MBR_norm'))
 results <- vector(length = nrow(method_list), mode = "list")
 # aucs <- rep(0, nrow(method_list))
 rmses <- rep(0, nrow(method_list))
