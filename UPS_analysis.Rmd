@@ -207,7 +207,7 @@ mq_prot_analysis <- function(proteinGroups, name){
     joined_mq <- filter(mq_prot_filt, ups) %>%
         left_join(ups_true_df, by = c("ups_prot_id" = "prot")) 
     rmsle <- sqrt(mean((log10(joined_mq$sr) - log10(joined_mq$ratios))^2, na.rm = TRUE))
-    mq_data <- data.frame("Var1" = "MaxLFQ", "Var2" = name, rmsle = rmsle)
+    mq_data <- data.frame("norm_methods" = "MaxLFQ", "quant_methods" = name, rmsle = rmsle)
     list("full_df" = mq_prot_filt, "rmlse" = mq_data, "joined_mq" = joined_mq)
 }
 
@@ -305,8 +305,8 @@ all_df <- cbind(method_list, rmsle = rmses)
 
 ```{r proteins}
 fc_accuracy <- rbind(all_df, mq_data$rmlse, mq_no_mbr_data$rmlse) %>%
-    rename("Normalization" = Var1,
-           "Tool" = Var2) 
+    rename("Normalization" = "norm_methods",
+           "Tool" = "quant_methods") 
 write.table(fc_accuracy, file = "results/fold_change_accuracy.tabular",
             quote = FALSE,
             row.names = FALSE,
