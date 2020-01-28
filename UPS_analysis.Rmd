@@ -250,7 +250,6 @@ peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col
         df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de,
                                 0, df_peca$ups[i])
     }
-    print(df_peca)
     
     df_peca_ratio <- df_peca %>%
         filter(ups == 1) %>%
@@ -292,7 +291,7 @@ for (i in 1:nrow(method_list)){
                                                  norm_method =  method_list$norm_methods[i],
                                                  grp1_col_name = names_df[7:10],
                                                  grp2_col_name = names_df[3:6])
-    #results[[i]] <- ith_result
+    results[[i]] <- ith_result
     # aucs[i] <- ith_result$roc$auc
     rmses[i] <- ith_result$rmsle
    }
