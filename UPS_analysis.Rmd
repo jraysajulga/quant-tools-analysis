@@ -316,143 +316,43 @@ write.table(fc_accuracy, file = "results/fold_change_accuracy.tabular",
 Plot the results:
 
 # High-Low Protein Abundance
+```{r}
+test <- data.frame('10' = numeric(10),
+                   '1' = numeric(10))
+test
+```
 
 ```{r}
-rmsles_hi5 <- rmsles_hi <- rmsles_med3 <- rmsles_med <- rmsles_low <- n_low1 <- n_low <- n_med3 <- n_med <- n_hi5 <- n_hi <- rep(0, nrow(method_list))
-rmsles_low1 <- rmsles_low <- rep(0, nrow(method_list))
-#ups_levels <- [0.0001, 0.001, 0.1, 0.01, 1, 10]
-for (i in 1:nrow(method_list)){
-  if (i != 14){
+all_himedlo <- data.frame(t(sapply(c(1:(length(results) + 1)), function(i){
+  if (i >= length(results)){
+    norm_method <- "MaxLFQ"
+    if (i == length(results)){
+      quant_method <- "MaxQuant"
+      peca_loc <- mq_data$joined_mq
+    } else {
+      quant_method <- "MaxQuant_no_MBR"
+      peca_loc <- mq_no_mbr_data$joined_mq
+    }
+  } else {
+    if (i > 13){ i <- i + 1 }
+    norm_method <- method_list$norm_methods[i]
+    quant_method <- method_list$quant_methods[i]
     peca_loc <- results[[i]]$peca
-    
-    hi <-  peca_loc %>% filter(ratios == 10)
-    n_hi[i] <- nrow(filter(hi, !is.na(sr)))
-    rmsles_hi[i] <- sqrt(mean((log10(hi$ratios) - log10(hi$sr))^2, na.rm = TRUE))
-    
-    hi5 <-  peca_loc %>% filter(ratios == 1)
-    n_hi5[i] <- nrow(filter(hi5, !is.na(sr)))
-    rmsles_hi5[i] <- sqrt(mean((log10(hi5$ratios) - log10(hi5$sr))^2, na.rm = TRUE))
-    
-    
-    med <- peca_loc %>% filter(ratios == 0.1)
-    n_med[i] <- nrow(filter(med, !is.na(sr)))
-    rmsles_med[i] <- sqrt(mean((log10(med$ratios) - log10(med$sr))^2, na.rm = TRUE))
-    
-    med3 <- peca_loc %>% filter(ratios == 0.01)
-    n_med3[i] <- nrow(filter(med3, !is.na(sr)))
-    rmsles_med3[i] <- sqrt(mean((log10(med3$ratios) - log10(med3$sr))^2, na.rm = TRUE))
-    
-    low <- peca_loc %>% filter(ratios == 0.001)
-    n_low[i] <- nrow(filter(low, !is.na(sr)))
-    rmsles_low[i] <- sqrt(mean((log10(low$ratios) - log10(low$sr))^2, na.rm = TRUE))
-    
-    low1 <- peca_loc %>% filter(ratios == 0.0001)
-    n_low1[i] <- nrow(filter(low1, !is.na(sr)))
-    rmsles_low1[i] <- sqrt(mean((log10(low1$ratios) - log10(low1$sr))^2, na.rm = TRUE))
   }
-}
-
-# maxquant, maxlfq, mbr
-mq_hi <- filter(mq_data$joined_mq, ratios == 10)
-mq_high_rmsle <- sqrt(mean((log10(mq_hi$ratios) - log10(mq_hi$sr))^2, na.rm = TRUE))
-mq_n_high <- nrow(filter(mq_hi, !is.na(sr)))
-
-mq_hi5 <- filter(mq_data$joined_mq, ratios == 1)
-mq_high5_rmsle <- sqrt(mean((log10(mq_hi5$ratios) - log10(mq_hi5$sr))^2, na.rm = TRUE))
-mq_n_high5 <- nrow(filter(mq_hi5, !is.na(sr)))
-
-mq_med <- filter(mq_data$joined_mq, ratios == 0.1)
-mq_med_rmsle <- sqrt(mean((log10(mq_med$ratios) - log10(mq_med$sr))^2, na.rm = TRUE))
-mq_n_med <- nrow(filter(mq_med, !is.na(sr)))
-
-mq_med3 <- filter(mq_data$joined_mq, ratios == 0.01)
-mq_med3_rmsle <- sqrt(mean((log10(mq_med3$ratios) - log10(mq_med3$sr))^2, na.rm = TRUE))
-mq_n_med3 <- nrow(filter(mq_med3, !is.na(sr)))
-
-mq_low <- filter(mq_data$joined_mq, ratios == 0.001)
-mq_low_rmsle <- sqrt(mean((log10(mq_low$ratios) - log10(mq_low$sr))^2, na.rm = TRUE))
-mq_n_low <- nrow(filter(mq_low, !is.na(sr)))
-
-mq_low1 <- filter(mq_data$joined_mq, ratios == 0.0001)
-mq_low1_rmsle <- sqrt(mean((log10(mq_low1$ratios) - log10(mq_low1$sr))^2, na.rm = TRUE))
-mq_n_low1 <- nrow(filter(mq_low1, !is.na(sr)))
-
-
-# maxquant, maxlfq, no mbr
-# high
-mq_no_mbr_hi <- filter(mq_no_mbr_data$joined_mq, ratios == 10)
-mq_no_mbr_high_rmsle <- sqrt(mean((log10(mq_no_mbr_hi$ratios) - log10(mq_no_mbr_hi$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_high <- nrow(filter(mq_no_mbr_hi, !is.na(sr)))
-
-mq_no_mbr_hi5 <- filter(mq_no_mbr_data$joined_mq, ratios == 1)
-mq_no_mbr_high5_rmsle <- sqrt(mean((log10(mq_no_mbr_hi5$ratios) - log10(mq_no_mbr_hi5$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_high5 <- nrow(filter(mq_no_mbr_hi5, !is.na(sr)))
-
-# medium
-mq_no_mbr_med <- filter(mq_no_mbr_data$joined_mq, ratios == 0.1)
-mq_no_mbr_med_rmsle <- sqrt(mean((log10(mq_no_mbr_med$ratios) - log10(mq_no_mbr_med$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_med <- nrow(filter(mq_no_mbr_med, !is.na(sr)))
-
-mq_no_mbr_med3 <- filter(mq_no_mbr_data$joined_mq, ratios == 0.01)
-mq_no_mbr_med3_rmsle <- sqrt(mean((log10(mq_no_mbr_med3$ratios) - log10(mq_no_mbr_med3$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_med3 <- nrow(filter(mq_no_mbr_med3, !is.na(sr)))
-
-# low
-mq_no_mbr_low <- filter(mq_no_mbr_data$joined_mq, ratios == 0.001)
-mq_no_mbr_low_rmsle <- sqrt(mean((log10(mq_no_mbr_low$ratios) - log10(mq_no_mbr_low$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_low <- nrow(filter(mq_no_mbr_low, !is.na(sr)))
-
-mq_no_mbr_low1 <- filter(mq_no_mbr_data$joined_mq, ratios == 0.0001)
-mq_no_mbr_low1_rmsle <- sqrt(mean((log10(mq_no_mbr_low1$ratios) - log10(mq_no_mbr_low1$sr))^2, na.rm = TRUE))
-mq_no_mbr_n_low1 <- nrow(filter(mq_no_mbr_low1, !is.na(sr)))
-
-
-himedlo <- cbind(method_list,
-                 "10" = rmsles_hi,
-                 "10n" = n_hi,
-                 "1" = rmsles_hi5,
-                 "1n" = n_hi5,
-                 "0.1" = rmsles_med,
-                 "0.1n" = n_med,
-                 "0.01" = rmsles_med3,
-                 "0.01n" = n_med3,
-                 "0.001" = rmsles_low,
-                 "0.001n" = n_low,
-                 "0.0001" = rmsles_low1,
-                 "0.0001n" = n_low1)
-
-mq_mbr <- c("Normalization" = "MaxLFQ",
-            "Tool" = "MaxQuant",
-            "10" = mq_high_rmsle,
-            "10n" = mq_n_high,
-            "1" = mq_high5_rmsle,
-            "1n" = mq_n_high5,
-            "0.1" = mq_med_rmsle,
-            "0.1n" = mq_n_med,
-            "0.01" = mq_med3_rmsle,
-            "0.01n" = mq_n_med3,
-            "0.001" = mq_low_rmsle,
-            "0.001n" = mq_n_low,
-            "0.0001" = mq_low1_rmsle,
-            "0.0001n" = mq_n_low1)
-
-mq_no_mbr <- c("Normalization" = "MaxLFQ",
-             "Tool" = "MaxQuant_no_MBR",
-             "10" = mq_no_mbr_high_rmsle,
-             "10n" = mq_no_mbr_n_high,
-             "1" = mq_no_mbr_high5_rmsle,
-             "1n" = mq_no_mbr_n_high5,
-             "0.1" = mq_med_rmsle,
-             "0.1n" = mq_no_mbr_n_med,
-             "0.01" = mq_med3_rmsle,
-             "0.01n" = mq_no_mbr_n_med3,
-             "0.001" = mq_no_mbr_low_rmsle,
-             "0.001n" = mq_no_mbr_n_low,
-             "0.0001" = mq_no_mbr_low1_rmsle,
-             "0.0001n" = mq_no_mbr_n_low1)
-
-all_himedlo <- rbind(himedlo, mq_mbr, mq_no_mbr)
-all_himedlo
+  results <- sapply(c(1:-4), function(exp){
+    de_level <- peca_loc %>% filter(ratios == 10^exp)
+    num <- nrow(filter(de_level, !is.na(sr)))
+    rsmle <- sqrt(mean((log10(de_level$ratios) - log10(de_level$sr))^2, na.rm = TRUE))
+    return(c(rsmle,num))
+  })
+  return(c(norm_method, quant_method, results))
+})))
+headers <- unlist(sapply(1:-4, function(exp){
+  ratio <- as.character(10^exp)
+  return(list(ratio, paste0(ratio, 'n')))
+}))
+colnames(all_himedlo) <- c('norm_methods', 'quant_methods', headers)
+all_himedlo 
 write.table(all_himedlo, file="results/high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
