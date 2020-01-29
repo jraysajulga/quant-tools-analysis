@@ -1,8 +1,8 @@
 ---
 title: "LFQ comparison"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -92,7 +92,8 @@ flash_names <- names(flash)
 flash$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
                            gsub("NH2-","", gsub("-COOH","", flash$peptide))))
-flash
+#flash
+
 # flash no mbr
 flash_no_mbr <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_without_norm/", ".+QuantifiedPeptides.tsv].tabular"),
                            stringsAsFactors = FALSE) %>%
@@ -102,11 +103,11 @@ flash_no_mbr$prot <- get_protein(flash_no_mbr$prot)
 flash_no_mbr$peptide <- gsub("<cmm>","",
                       gsub("<ox>","",
                            gsub("NH2-","", gsub("-COOH","", flash_no_mbr$peptide))))
-flash_no_mbr
+#flash_no_mbr
 ```
 
 ### FlashLFQ (with normalization)
-```{r flash}
+```{r flash_norm}
 flash_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/MBR_with_norm/",
                                       ".+BayesianFoldChangeAnalysis.tsv].tabular"),
                     stringsAsFactors = FALSE) %>%
@@ -114,7 +115,7 @@ flash_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/MBR_with_norm/",
     #select(prot, Protein.Intensity.for.Treatment.Condition)
 flash_norm$prot <- get_protein(flash_norm$prot)
 #flash_names <- names(flash)
-flash_norm
+#flash_norm
 
 # flash no mbr
 flash_no_mbr_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_with_norm/",
@@ -122,7 +123,7 @@ flash_no_mbr_norm <- read.delim(get_filename(root, "/UPS/FLASHLFQ/noMBR_with_nor
                             stringsAsFactors = FALSE) %>%
     rename(prot = Protein.Group)
 flash_no_mbr_norm$prot <- get_protein(flash_no_mbr_norm$prot)
-flash_no_mbr_norm
+#flash_no_mbr_norm
 ```
 
 
@@ -134,7 +135,7 @@ moff <- read.delim(get_filename(root, "/UPS/moff/withMBR/", ".+peptide_summary].
 moff$prot <- get_protein(moff$prot)
 moff_names <- names(moff)
 moff <- moff[,order(colnames(moff))]
-moff
+#moff
 ```
 
 When moFF is run without MBR, we need to combine all of the individual peptide summaries, which we do with `join_all` from `plyr`. 
@@ -150,7 +151,7 @@ moff_no_mbr <- lapply(moff_files, function(i) df = read.delim(i, as.is = TRUE) %
                  str_extract(i, "UPS[0-9_]+"), sep="") := sumIntensity_UPS_PSM_All_edited)) %>%
                         join_all(by=c("peptide", "prot"), type = "full")
 moff_no_mbr$prot <- get_protein(moff_no_mbr$prot)
-moff_no_mbr
+#moff_no_mbr
 ```
 
 ### MaxQuant
@@ -163,14 +164,14 @@ mq <- read.delim(paste0('data/', root, "/UPS/MAXQUANT/MQ_MBR/txt/peptides.txt"),
     select(peptide, prot, starts_with("Intensity."))
 mq$prot <- get_protein(mq$prot)
 mq_names <- names(mq)
-mq
+#mq
 # mq no mbr
 mq_no_mbr <- read.delim(paste0('data/', root, "/UPS/MAXQUANT/MQ_NoMBR/txt/peptides.txt"),
                         stringsAsFactors = FALSE) %>%
     rename(peptide = Sequence, prot = Proteins) %>%
     select(peptide, prot, starts_with("Intensity."))
 mq_no_mbr$prot <- get_protein(mq_no_mbr$prot)
-mq_no_mbr
+#mq_no_mbr
 ```
 
 #### Proteins
@@ -224,45 +225,41 @@ Below is the function that is used on all of the peptide reports to normalize an
 ```{r testfun}
 peptides_normalize_and_test_de <- function(df, quant_method, int_col_vec, id_col_name,
                                            norm_method, grp1_col_name, grp2_col_name){
-  
-    if (str_detect(quant_method, "norm")){
-      df_peca <- df %>% rename(p = False.Discovery.Rate,
-                               slr = Protein.Log2.Fold.Change)
+  if (str_detect(quant_method, "norm")){
+    df_peca <- df %>% rename(p = False.Discovery.Rate,
+                             slr = Protein.Log2.Fold.Change)
+  } else {
+    if (norm_method == "vsn"){
+      intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
+    } else if (norm_method != 'NA') {
+      intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])), method = norm_method))
     } else {
-      if (norm_method == "vsn"){
-        intensities <- 2^limma::normalizeVSN(as.matrix(df[, int_col_vec]))
-      } else if (norm_method != 'NA') {
-        intensities <- 2^(limma::normalizeBetweenArrays(log2(as.matrix(df[, int_col_vec])), method = norm_method))
-      } else {
-        intensities <- as.matrix(df[, int_col_vec])
-      }
-      
-      df_norm <- data.frame(prot = df$prot, intensities, stringsAsFactors = FALSE)
-      df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
-                               test = "modt")
-      df_peca$prot <- rownames(df_peca)
-    }
-  
-    # ups proteins
-    df_peca$ups <- as.numeric(df_peca$prot %in% ups_protein_ids)
-    # ups proteins that are not DE
-    for (i in 1:nrow(df_peca)){
-        df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de,
-                                0, df_peca$ups[i])
+      intensities <- as.matrix(df[, int_col_vec])
     }
     
-    df_peca_ratio <- df_peca %>%
-        filter(ups == 1) %>%
-        left_join(ups_true_df, by = "prot") %>%
-        mutate(sr = 2^slr) # peca returns log2 fold change
-    sqr_err <- (log10(df_peca_ratio$sr) - log10(df_peca_ratio$ratios))^2
-    rmsle <- sqrt(mean(sqr_err, na.rm = TRUE))
-    #print(df_peca_ratio)
-    return(list("peca" = df_peca_ratio,
-                "full_peca" = df_peca,
-                #"roc" = df_roc,
-                "rmsle" = rmsle))#,
-                #"sd" = sd))
+    df_norm <- data.frame(prot = df$prot, intensities, stringsAsFactors = FALSE)
+    df_peca <- PECA::PECA_df(df_norm, id = id_col_name, samplenames1 = grp1_col_name, samplenames2 = grp2_col_name,
+                             test = "modt")
+    df_peca$prot <- rownames(df_peca)
+  }
+  
+  # ups proteins
+  df_peca$ups <- as.numeric(df_peca$prot %in% ups_protein_ids)
+  # ups proteins that are not DE
+  for (i in 1:nrow(df_peca)){
+    df_peca$de[i] <- ifelse(df_peca$prot[i] %in% ups_non_de, 0, df_peca$ups[i])
+  }
+  
+  df_peca_ratio <- df_peca %>%
+    filter(ups == 1) %>%
+    left_join(ups_true_df, by = "prot") %>%
+    mutate(sr = 2^slr) # peca returns log2 fold change
+  sqr_err <- (log10(df_peca_ratio$sr) - log10(df_peca_ratio$ratios))^2
+  rmsle <- sqrt(mean(sqr_err, na.rm = TRUE))
+  
+  return(list("peca" = df_peca_ratio,
+              "full_peca" = df_peca,
+              "rmsle" = rmsle))
 }
 ```
 ```{r peptides, warning=FALSE,message=FALSE}
@@ -299,29 +296,23 @@ for (i in 1:nrow(method_list)){
 all_df <- cbind(method_list, rmsle = rmses)
 ```
 
+# Results
+
+## RMSLE
+
+### Combined Levels
 ```{r proteins}
 fc_accuracy <- rbind(all_df, mq_data$rmlse, mq_no_mbr_data$rmlse) %>%
     rename("Normalization" = "norm_methods",
            "Tool" = "quant_methods") 
+fc_accuracy
 write.table(fc_accuracy, file = "results/fold_change_accuracy.tabular",
             quote = FALSE,
             row.names = FALSE,
             sep = '\t')
 ```
 
-# Results
-
-
-## RMSLE
-Plot the results:
-
-# High-Low Protein Abundance
-```{r}
-test <- data.frame('10' = numeric(10),
-                   '1' = numeric(10))
-test
-```
-
+### Individual ratio levels
 ```{r}
 all_himedlo <- data.frame(t(sapply(c(1:(length(results) + 1)), function(i){
   if (i >= length(results)){
@@ -352,7 +343,7 @@ headers <- unlist(sapply(1:-4, function(exp){
   return(list(ratio, paste0(ratio, 'n')))
 }))
 colnames(all_himedlo) <- c('norm_methods', 'quant_methods', headers)
-all_himedlo 
+all_himedlo
 write.table(all_himedlo, file="results/high_low_fold_change_accuracy_new.tab",
             sep="\t", quote=FALSE, row.names=FALSE)
 ``` 
